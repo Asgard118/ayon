@@ -39,7 +39,7 @@ def studio_settings_addons(bundle_name: str, file_path: str = None):
     with open(file_path, 'w', encoding='utf-8') as file:
         json.dump(data, file, indent=4, ensure_ascii=False)
 
-def project_settings_addons(project_name: str, *args: str):
+def get_project_settings_addons(project_name: str, *args: str):
     data = get_addons_project_settings(project_name)
     if not args:
         return data
@@ -50,11 +50,11 @@ def project_settings_addons(project_name: str, *args: str):
     
     return data
 
-def addons_setting(addon_name: str, name_project: str, name_budle: str):
+def get_addons_setting(addon_name: str, name_project: str, name_budle: str):
     pro_data = get_addons_settings(project_name = name_project)
     studio_data = get_addons_settings(bundle_name = name_budle)
     return pro_data, studio_data[addon_name]
 
-def anatomy_project():
+def get_anatomy_project():
     data = get_project_anatomy_preset()
     return data
