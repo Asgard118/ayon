@@ -1,5 +1,6 @@
 import os
 import json
+import requests
 from ayon_api import get_addons_settings, get_addons_project_settings, get_bundles, get_project_anatomy_preset
 
 os.environ['USE_AYON_SERVER'] = '1'
