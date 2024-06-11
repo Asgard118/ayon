@@ -1,6 +1,4 @@
 from ayon_api import get_bundle_settings
-import ayon_api
-import json
 class BundleMode:
     PRODUCTION = 'production'
     STAGING = 'staging'
