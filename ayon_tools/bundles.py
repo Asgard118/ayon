@@ -1,3 +1,4 @@
+import ayon_api
 from ayon_api import get_bundle_settings
 class BundleMode:
     PRODUCTION = 'production'
@@ -42,7 +43,7 @@ def get_bundle(bundle_name: str) -> dict:
             for bundle in data['bundles']:
                 if bundle['name'] == bundle_name:
                     return bundle['addons']
-        return None
+
 def get_production_bundle() -> dict:
     """
     Функция возвращает настройки бандла в статусе production
@@ -64,9 +65,8 @@ def create_bundle(
     Создает бандл, с указаным названием, аддонами и их версиями, и версией инсталера
     """
     ayon_api.create_bundle(
-        name=name,
-        addon_versions=addons,
-        installer_version=installer_version,
-        dependency_packages=dependency_packages
-        )
+            name=name,
+            addon_versions=addons,
+            installer_version=installer_version,
+            dependency_packages=dependency_packages)
 

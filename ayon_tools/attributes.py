@@ -11,9 +11,7 @@ def set_attributes(attributes: dict):
     """
     set_attribute_config()
 
-
 def create_attribute(name: str, attr_type: str):
     attributes = get_attributes()
     ...
     set_attributes(attributes)
-
