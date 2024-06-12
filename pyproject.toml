@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.9"
 ayon-python-api = "^1.0.5"
+black = "^24.4.2"
 
 
 [build-system]
