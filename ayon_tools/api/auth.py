@@ -1,5 +1,3 @@
-import os
-os.environ['USE_AYON_SERVER'] = '1'
 import ayon_api
 
 __all__ = ['auth']
