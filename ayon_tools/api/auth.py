@@ -25,5 +25,5 @@ class Auth:
         os.environ[self.api_key_env_name] = self.API_KEY = api_key
         self.HEADERS['x-api-key'] = self.API_KEY
 
-
 auth = Auth()
+
