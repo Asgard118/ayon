@@ -1,6 +1,7 @@
+from typing import Any
+import requests
 import ayon_api
 from .auth import auth
-import requests
 
 
 def get_attributes() -> dict:
@@ -19,20 +20,70 @@ def set_attributes(attribute: str, data: dict):
     return response.raise_for_status()
 
 
-def check_attribute(name: str):
+def check_attribute_exists(name: str) -> bool:
     """
     Проверяет наличие атрибута по имени
     """
     attributes = get_attributes()
     for attribute in attributes['attributes']:
         if isinstance(attribute, dict) and attribute.get('name') == name:
-            return attribute
-    return None
+            return True
+    return False
 
 
-def create_attribute(data: dict):
+def create_attribute(
+        name: str,
+        title: str,
+        scope: list,
+        description: str = None,
+        builtin: bool = True,
+        data_type: str = 'string',
+        example: Any = None,
+        options: dict = None
+        ):
     """
     Создает атрибут
+
+    Options:
+    {
+        "default": 25,
+        "gt": 0,
+        "ge": null,
+        "lt": null,
+        "le": null,
+        "minLength": null,
+        "maxLength": null,
+        "minItems": null,
+        "maxItems": null,
+        "regex": null,
+        "enum": null,
+        "inherit": true
+    }
     """
-    response = requests.put(url=f'{auth.SERVER_URL}/api/attributes', headers=auth.HEADERS, json=data)
+    if check_attribute_exists(name):
+        raise NameError(f'Attribute "{name}" already exists')
+    creation_data = {
+      "name": name,
+      "position": 0,
+      "scope": _check_attr_date_type(scope),
+      "builtin": builtin,
+      "data": {
+        "type": _check_attr_date_type(data_type),
+        "title": title,
+        "example": example or '',
+        "description": description or "",
+        **(options or {})
+        }
+    }
+    response = requests.put(url=f'{auth.SERVER_URL}/api/attributes', headers=auth.HEADERS, json=creation_data)
     return response.raise_for_status()
+
+
+def _check_attr_date_type(data_type):
+    # TODO
+    return data_type
+
+
+def check_attr_scope(scope):
+    # TODO
+    return scope
