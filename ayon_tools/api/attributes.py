@@ -13,16 +13,6 @@ def set_attributes(attribute: str, data: dict):
     """
     response = requests.put(url=f'{auth.SERVER_URL}/api/attributes/{attribute}', headers=auth.HEADERS, json=data)
     return response.raise_for_status()
-
-def check_attribute(name: str):
-    """
-    Проверяет наличие атрибута по имени
-    """
-    attributes = get_attributes()
-    for attribute in attributes['attributes']:
-        if isinstance(attribute, dict) and attribute.get('name') == name:
-            return attribute
-    return None
 def create_attribute(data: dict):
     """
     Создает атрибут

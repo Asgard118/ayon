@@ -1,66 +1,48 @@
 import ayon_api
 from ayon_api import get_bundle_settings
-
-
 class BundleMode:
     PRODUCTION = 'production'
     STAGING = 'staging'
 
-
 # bundles
 def get_bundles() -> dict:
-    """
-    Example:
-
-    {
-    'bundles':
-      [
-       {
-         'addonDevelopment': {},
-         'addons': {'aftereffects': '0.1.3',
-                    'applications': '0.1.5',
-                    'core': '0.1.5',
-                    'traypublisher': '0.1.4'
-                    ...
-                   },
-         'createdAt': '2024-06-10T10:37:08.619950+00:00',
-         'dependencyPackages': {'darwin': 'ayon_2401161815_darwin.zip',
-                                'linux': 'ayon_2310271555_linux.zip',
-                                'windows': 'ayon_2310271602_windows.zip'},
-         'installerVersion': '1.0.2',
-         'isArchived': False,
-         'isDev': False,
-         'isProduction': True,
-         'isStaging': True,
-         'name': 'bundle_name'
-       },
-         ...
-      ],
-    'devBundles': [],
-    'productionBundle': 'bundle_name',
-    'stagingBundle': 'staging_bundle_name'
-    }"""
     return ayon_api.get_bundles()
 
-
 def get_bundle(bundle_name: str) -> dict:
-    """
-    Возвращает аддоны бандла по имени бандла
-    {
+        """
+        Возвращает аддоны бандла по имени бандла
         {
-        'aftereffects': '0.1.3',
-        'applications': '0.1.4',
-        'blender': '0.1.6',
-        ...
+            TODO: пример по запросу на имя имя бандла "bundle-01", вернет:
+{'aftereffects': '0.1.3',
+ 'applications': '0.1.4',
+ 'blender': '0.1.6',
+ 'celaction': '0.1.0',
+ 'clockify': '0.1.1',
+ 'core': '0.1.5',
+ 'deadline': '0.1.8',
+ 'equalizer': '0.0.1',
+ 'fusion': '0.1.4',
+ 'hiero': '0.1.2',
+ 'houdini': '0.2.11',
+ 'max': '0.1.5',
+ 'maya': '0.1.8',
+ 'nuke': '0.1.9',
+ 'openpype': '3.18.11-nightly.6',
+ 'photoshop': '0.1.1',
+ 'resolve': '0.1.0',
+ 'royalrender': '0.1.1',
+ 'substancepainter': '0.1.1',
+ 'timers_manager': '0.1.1',
+ 'traypublisher': '0.1.3',
+ 'tvpaint': '0.1.1',
+ 'unreal': '0.1.0'}
         }
-    }
-    """
-    data = get_bundles()
-    if 'bundles' in data:
-        for bundle in data['bundles']:
-            if bundle['name'] == bundle_name:
-                return bundle['addons']
-
+        """
+        data = get_bundles()
+        if 'bundles' in data:
+            for bundle in data['bundles']:
+                if bundle['name'] == bundle_name:
+                    return bundle['addons']
 
 def get_production_bundle() -> dict:
     """
@@ -68,16 +50,12 @@ def get_production_bundle() -> dict:
     """
     data = get_bundle_settings()
     return data
-
-
 def get_staging_bundle() -> dict:
     """
     Возвращает бандл в статусе staging
     """
     data = get_bundles().get('bundles', [])
     return next((item for item in data if item.get('isStaging')), None)
-
-
 def create_bundle(
         name: str,
         addons: dict,
@@ -87,7 +65,8 @@ def create_bundle(
     Создает бандл, с указаным названием, аддонами и их версиями, и версией инсталера
     """
     ayon_api.create_bundle(
-        name=name,
-        addon_versions=addons,
-        installer_version=installer_version,
-        dependency_packages=dependency_packages)
+            name=name,
+            addon_versions=addons,
+            installer_version=installer_version,
+            dependency_packages=dependency_packages)
+
