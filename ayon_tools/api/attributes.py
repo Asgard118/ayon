@@ -65,7 +65,7 @@ def create_attribute(
     creation_data = {
       "name": name,
       "position": 0,
-      "scope": _check_attr_date_type(scope),
+      "scope": check_attr_scope(scope),
       "builtin": builtin,
       "data": {
         "type": _check_attr_date_type(data_type),
