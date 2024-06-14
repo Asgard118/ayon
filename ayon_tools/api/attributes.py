@@ -79,11 +79,24 @@ def create_attribute(
     return response.raise_for_status()
 
 
-def _check_attr_date_type(data_type):
-    # TODO
+def _check_attr_date_type(data_type: str):
+    """
+    Проверяет соответствие типа атрибута
+    """
+    valid_data_types = ['String', 'Integer', 'Decimal number', 'list Of Strings', 'Boolean']
+    if data_type not in valid_data_types:
+        raise ValueError(f"Invalid data type: {data_type}.")
     return data_type
 
 
-def check_attr_scope(scope):
-    # TODO
+def check_attr_scope(scope: list):
+    """
+    Проверяет соответствие типа области атрибута
+    """
+    valid_scopes = ['Project', 'Folder', 'Task', 'User', 'Product', 'Version', 'Representation']
+    if not isinstance(scope, list):
+        raise ValueError(f"Scope should be a list of valid values. Provided: {scope}")
+    invalid_scopes = [s for s in scope if s not in valid_scopes]
+    if invalid_scopes:
+        raise ValueError(f"Invalid scope(s)")
     return scope
