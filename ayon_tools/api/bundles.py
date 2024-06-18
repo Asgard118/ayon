@@ -1,20 +1,10 @@
 import ayon_api
-from ayon_api import get_bundle_settings, GlobalServerAPI
+from ayon_api import get_bundle_settings
 import os
 
 class BundleMode:
     PRODUCTION = 'production'
     STAGING = 'staging'
-
-def new_auth(self):
-    username = input("Введите имя пользователя: ")
-    password = input("Введите пароль: ")
-    previous_token = self._access_token
-    super(GlobalServerAPI, self).login(username, password)
-    if self.has_valid_token and previous_token != self._access_token:
-        os.environ[SERVER_API_ENV_KEY] = self._access_token
-
-GlobalServerAPI.login = new_auth()
 
 # bundles
 def get_bundles() -> dict:

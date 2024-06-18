@@ -1,5 +1,5 @@
 import ayon_api
-from .auth import auth
+from .auth import default_auth
 import requests
 
 
@@ -10,7 +10,6 @@ def get_studio_anatomy_presets_names() -> list:
     """
     data = ayon_api.get_project_anatomy_presets()
     return data
-
 
 def get_studio_anatomy_preset(preset_name: str = None) -> dict:
     """
@@ -39,7 +38,7 @@ def create_studio_anatomy_preset(preset_name: str, preset: dict):
 
 
 # project anatomy
-def get_project_anatomy(project_name: str) -> dict:
+def get_project_anatomy(project_name: str, auth=default_auth) -> dict:
     """
     Функция возвращает анатомию конкретного проекта
     """

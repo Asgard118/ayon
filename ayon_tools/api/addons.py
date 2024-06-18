@@ -1,18 +1,19 @@
 import ayon_api
 import requests
-from .auth import auth
+from .auth import default_auth
 
 
 # studio addon settings
-def get_studio_settings(bundle_name: str) -> dict:
+def get_studio_settings(bundle_name: str, auth=default_auth) -> dict:
     """
     Возвращает студийные настройки конкретного бандла
     """
-    data = ayon_api.get_addons_settings(bundle_name)
+    with auth:
+        data = ayon_api.get_addons_settings(bundle_name)
     return data
 
 
-def set_studio_settings(addon_name: str, version: str, settings: dict):
+def set_studio_settings(addon_name: str, version: str, settings: dict, auth=default_auth):
     """
     Обновление конкретной версии аддона, по определенным настройкам
     """
@@ -30,7 +31,7 @@ def get_project_settings(project_name: str) -> dict:
     return data
 
 
-def set_project_settings(addon_name: str, version: str, project_name: str, settings: dict):
+def set_project_settings(addon_name: str, version: str, project_name: str, settings: dict, auth=default_auth):
     """
     Обновляет конкретную версию аддона проекта
     """
