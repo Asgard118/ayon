@@ -1,25 +1,27 @@
 import ayon_api
-from .auth import default_auth
+from .auth import default_auth, Auth
 import requests
 
 
 # studio presets
-def get_studio_anatomy_presets_names() -> list:
+def get_studio_anatomy_presets_names(auth: Auth = default_auth) -> list:
     """
     Возвращает список анатомии пресетов студии
     """
-    data = ayon_api.get_project_anatomy_presets()
+    with auth:
+        data = ayon_api.get_project_anatomy_presets()
     return data
 
-def get_studio_anatomy_preset(preset_name: str = None) -> dict:
+def get_studio_anatomy_preset(preset_name: str = None, auth: Auth = default_auth) -> dict:
     """
     Возвращает настройки конкретной анатомии пресета или PRIMARY, если не указано наименование пресета
     """
-    data = ayon_api.get_project_anatomy_preset(preset_name)
+    with auth:
+        data = ayon_api.get_project_anatomy_preset(preset_name)
     return data
 
 
-def set_studio_anatomy_preset(preset_name: str, preset: dict):
+def set_studio_anatomy_preset(preset_name: str, preset: dict, auth: Auth = default_auth):
     """
     Функция загружает настройки(в формате JSON) в конкретный пресет анатомии
     """
@@ -28,7 +30,7 @@ def set_studio_anatomy_preset(preset_name: str, preset: dict):
     response.raise_for_status()
 
 
-def create_studio_anatomy_preset(preset_name: str, preset: dict):
+def create_studio_anatomy_preset(preset_name: str, preset: dict, auth: Auth = default_auth):
     """
     Функция создает пресет анатомии
     """
@@ -38,7 +40,7 @@ def create_studio_anatomy_preset(preset_name: str, preset: dict):
 
 
 # project anatomy
-def get_project_anatomy(project_name: str, auth=default_auth) -> dict:
+def get_project_anatomy(project_name: str, auth: Auth = default_auth) -> dict:
     """
     Функция возвращает анатомию конкретного проекта
     """
@@ -48,7 +50,7 @@ def get_project_anatomy(project_name: str, auth=default_auth) -> dict:
     return response.json()
 
 
-def set_project_anatomy(project_name: str, anatomy: dict):
+def set_project_anatomy(project_name: str, anatomy: dict, auth: Auth = default_auth):
     url = f"{auth.SERVER_URL}/api/projects/{project_name}/anatomy"
     response = requests.post(url=url, headers=auth.HEADERS, json=anatomy)
     response.raise_for_status()

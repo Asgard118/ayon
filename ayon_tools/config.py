@@ -6,11 +6,11 @@ WORKDIR = Path(os.getenv("AYON_TOOLS_WORKDIR") or "~/.ayon_tools").expanduser()
 
 
 def load_config():
-    config_file = WORKDIR / "config.json"
-    if config_file.exists():
-        with config_file.open("r") as stream:
-            return json.load(stream)
-    raise LookupError("App config not found")
+	config_file = WORKDIR / "config.json"
+	if config_file.exists():
+		with config_file.open("r") as stream:
+			return json.load(stream)
+	raise LookupError("App config not found")
 
 
 conf = load_config()
@@ -20,8 +20,8 @@ STUDIO_CONFIG_DIR = WORKDIR / "studios"
 
 
 def get_studio_local_config(studio_name):
-    config_file = STUDIO_CONFIG_DIR / f"{studio_name}.json"
-    if config_file.exists():
-        with config_file.open("r") as stream:
-            return json.load(stream)
-    raise LookupError(f"Studio config not found: {studio_name}")
+	config_file = STUDIO_CONFIG_DIR / f"{studio_name}.json"
+	if config_file.exists():
+		with config_file.open("r") as stream:
+			return json.load(stream)
+	raise LookupError(f"Studio config not found: {studio_name}")
