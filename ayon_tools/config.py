@@ -1,9 +1,8 @@
 import os
 from pathlib import Path
 import json
-from .api.auth import default_auth
 
-WORKDIR = Path(os.getenv("AYON_TOOLS_WORKDIR") or '~/.ayon_tools').expanduser()
+WORKDIR = Path(os.getenv("AYON_TOOLS_WORKDIR") or "~/.ayon_tools").expanduser()
 
 
 def load_config():
@@ -11,7 +10,7 @@ def load_config():
     if config_file.exists():
         with config_file.open("r") as stream:
             return json.load(stream)
-    return dict()
+    raise LookupError("App config not found")
 
 
 conf = load_config()
@@ -19,27 +18,10 @@ REPOSITORY_DIR = WORKDIR / "repository"
 REPOSITORY_URL = conf.get("configs_repository_url")
 STUDIO_CONFIG_DIR = WORKDIR / "studios"
 
-class StudioData():
-    def __int__(self, auth):
-        self.auth = auth
 
-    def get_addons_data(self):
-        ...
-
-    def get_addon_data(self):
-        ...
-
-    def get_anatomy_data(self):
-        ...
-
-    def get_attributes_data(self):
-        ...
-
-    def get_bundle_data(self):
-        ...
-
-    def get_studio_data(self):
-        ...
-
-    def get_project_data(self, project_name):
-        ...
+def get_studio_local_config(studio_name):
+    config_file = STUDIO_CONFIG_DIR / f"{studio_name}.json"
+    if config_file.exists():
+        with config_file.open("r") as stream:
+            return json.load(stream)
+    raise LookupError(f"Studio config not found: {studio_name}")

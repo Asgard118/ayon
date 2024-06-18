@@ -14,7 +14,7 @@ class Auth:
         self.API_KEY = token
         self.HEADERS = {}
         self._prev_connection = None
-        self.set_credentials()
+        self.set_credentials(url, token)
 
     def set_credentials(self, server_url: str = None, api_key: str = None):
         ayon_api.close_connection()
@@ -28,7 +28,8 @@ class Auth:
 
     def __enter__(self):
         self._prev_connection = GlobalContext._connection
-        GlobalContext.change_token(self.SERVER_URL, self.API_KEY)
+        if GlobalContext._connection and GlobalContext._connection._access_token != self.API_KEY:
+            GlobalContext.change_token(self.SERVER_URL, self.API_KEY)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         GlobalContext._connection = self._prev_connection

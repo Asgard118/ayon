@@ -1,6 +1,6 @@
 import ayon_api
 import requests
-from .auth import default_auth
+from .auth import default_auth, Auth
 
 
 # studio addon settings
@@ -23,11 +23,12 @@ def set_studio_settings(addon_name: str, version: str, settings: dict, auth=defa
 
 
 # project settings
-def get_project_settings(project_name: str) -> dict:
+def get_project_settings(project_name: str, auth: Auth = default_auth) -> dict:
     """
     Возвращает настройки аддонов конкретного проекта
     """
-    data = ayon_api.get_addons_project_settings(project_name)
+    with auth:
+        data = ayon_api.get_addons_project_settings(project_name)
     return data
 
 
