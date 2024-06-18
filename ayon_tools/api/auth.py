@@ -1,4 +1,6 @@
 import ayon_api
+import os
+from ayon_api._api import GlobalContext
 
 __all__ = ['auth']
 
@@ -24,4 +26,17 @@ class Auth:
         self.HEADERS['x-api-key'] = self.API_KEY
 
 auth = Auth()
+
+class StudioAuth:
+    def __init__(self, url, token):
+        self.url = url
+        self.token = token
+        self._prev_connection = None
+
+    def __enter__(self):
+        self._prev_connection = GlobalContext._connection
+        GlobalContext.change_token(self.url, self.token)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        GlobalContext._connection = self._prev_connection
 

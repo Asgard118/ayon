@@ -1,16 +1,24 @@
 import ayon_api
-from ayon_api import get_bundle_settings
-
+from ayon_api import get_bundle_settings, GlobalServerAPI
+import os
 
 class BundleMode:
     PRODUCTION = 'production'
     STAGING = 'staging'
 
+def new_auth(self):
+    username = input("Введите имя пользователя: ")
+    password = input("Введите пароль: ")
+    previous_token = self._access_token
+    super(GlobalServerAPI, self).login(username, password)
+    if self.has_valid_token and previous_token != self._access_token:
+        os.environ[SERVER_API_ENV_KEY] = self._access_token
+
+GlobalServerAPI.login = new_auth()
 
 # bundles
 def get_bundles() -> dict:
     return ayon_api.get_bundles()
-
 
 def get_bundle(bundle_name: str) -> dict:
     """
@@ -32,7 +40,6 @@ def get_bundle(bundle_name: str) -> dict:
             if bundle['name'] == bundle_name:
                 return bundle['addons']
 
-
 def get_production_bundle() -> dict:
     """
     Функция возвращает настройки бандла в статусе production
@@ -40,14 +47,12 @@ def get_production_bundle() -> dict:
     data = get_bundle_settings()
     return data
 
-
 def get_staging_bundle() -> dict:
     """
     Возвращает бандл в статусе staging
     """
     data = get_bundles().get('bundles', [])
     return next((item for item in data if item.get('isStaging')), None)
-
 
 def create_bundle(
         name: str,
