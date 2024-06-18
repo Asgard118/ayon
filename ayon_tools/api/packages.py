@@ -1,6 +1,5 @@
 import ayon_api
 
-
 # dependency packages
 def get_dep_packages() -> dict:
     """
