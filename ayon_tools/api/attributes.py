@@ -4,9 +4,6 @@ import ayon_api
 from .auth import default_auth, Auth
 
 
-# from .auth import auth
-
-
 def get_attributes(auth: Auth = default_auth) -> dict:
 	"""
 	Функция возвращает список атрибутов
@@ -16,16 +13,16 @@ def get_attributes(auth: Auth = default_auth) -> dict:
 	return data
 
 
-def set_attributes(attribute: str, data: dict, auth: Auth = default_auth):
+def set_attributes(attribute: str, data: dict, url: str, head: str):
 	"""
 	Функцию обновляет конфигурацию конкретного аттрибута
 	"""
 	response = requests.put(
-		url=f"{auth.SERVER_URL}/api/attributes/{attribute}",
-		headers=auth.HEADERS,
+		url=f"{url}/api/attributes/{attribute}",
+		headers=head,
 		json=data,
 	)
-	return response.raise_for_status()
+	response.raise_for_status()
 
 
 def check_attribute_exists(name: str) -> bool:
@@ -43,12 +40,13 @@ def create_attribute(
 		name: str,
 		title: str,
 		scope: list,
+		url: str,
+		head: str,
 		description: str = None,
 		builtin: bool = True,
 		data_type: str = "string",
 		example: Any = None,
-		options: dict = None,
-		auth: Auth = default_auth
+		options: dict = None
 ):
 	"""
 	Создает атрибут
@@ -85,11 +83,11 @@ def create_attribute(
 		},
 	}
 	response = requests.put(
-		url=f"{auth.SERVER_URL}/api/attributes",
-		headers=auth.HEADERS,
+		url=f"{url}/api/attributes",
+		headers=head,
 		json=creation_data,
 	)
-	return response.raise_for_status()
+	response.raise_for_status()
 
 
 def _check_attr_date_type(data_type: str):

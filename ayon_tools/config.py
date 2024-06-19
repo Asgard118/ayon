@@ -2,7 +2,9 @@ import os
 from pathlib import Path
 import json
 
-WORKDIR = Path(os.getenv("AYON_TOOLS_WORKDIR") or "~/.ayon_tools").expanduser()
+os.getenv("AYON_TOOLS_WORKDIR")
+
+WORKDIR = Path(os.getenv("AYON_TOOLS_WORKDIR") or "~.ayon_tools/").expanduser()
 
 
 def load_config():
@@ -10,7 +12,7 @@ def load_config():
 	if config_file.exists():
 		with config_file.open("r") as stream:
 			return json.load(stream)
-	raise LookupError("App config not found")
+	raise LookupError(f"App config not found{config_file}")
 
 
 conf = load_config()
