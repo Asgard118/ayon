@@ -1,5 +1,5 @@
 import ayon_api
-from auth import default_auth, Auth
+from .auth import default_auth, Auth
 import requests
 
 

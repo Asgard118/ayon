@@ -21,8 +21,6 @@ class Auth:
         if not server_url or not api_key:
             raise Exception("Server url and api key are required")
         ayon_api.close_connection()
-        server_url = server_url or os.getenv(self.endpoint_env_name)
-        api_key = api_key or os.getenv(self.api_key_env_name)
         os.environ[self.endpoint_env_name] = self.SERVER_URL = server_url.rstrip("/")
         os.environ[self.api_key_env_name] = self.API_KEY = api_key
         self.HEADERS["x-api-key"] = self.API_KEY
