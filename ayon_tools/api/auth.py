@@ -10,11 +10,12 @@ class Auth:
     api_key_env_name = "AYON_API_KEY"
 
     def __init__(self, server_url: str = None, token: str = None, **kwargs):
-        self.SERVER_URL = server_url
-        self.API_KEY = token
+        self.SERVER_URL = server_url or os.getenv(self.endpoint_env_name)
+        self.API_KEY = token or os.getenv(self.api_key_env_name)
         self.HEADERS = {}
         self._prev_connection = None
-        self.set_credentials(server_url, token)
+        if self.SERVER_URL and self.API_KEY:
+            self.set_credentials(server_url, token)
 
     def set_credentials(self, server_url: str, api_key: str):
         if not server_url or not api_key:
