@@ -75,7 +75,8 @@ def create_bundle(
             dependency_packages=dependency_packages,
         )
 
-def update_bundle(settings: dict,bundle_name: str, auth: Auth = default_auth):
+
+def update_bundle(bundle_name: str, settings: dict, auth: Auth = default_auth):
     response = requests.patch(
         url=f"{auth.SERVER_URL}/api/bundles/{bundle_name}",
         headers=auth.HEADERS,
