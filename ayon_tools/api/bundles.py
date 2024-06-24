@@ -1,6 +1,7 @@
 import ayon_api
 from ayon_api import get_bundle_settings
 from .auth import default_auth, Auth
+import requests
 
 
 class BundleMode:
@@ -73,3 +74,11 @@ def create_bundle(
             installer_version=installer_version,
             dependency_packages=dependency_packages,
         )
+
+def update_bundle(settings: dict,bundle_name: str, auth: Auth = default_auth):
+    response = requests.patch(
+        url=f"{auth.SERVER_URL}/api/bundles/{bundle_name}",
+        headers=auth.HEADERS,
+        json=settings,
+    )
+    response.raise_for_status()

@@ -18,18 +18,13 @@ def fetch_file_contents(repo_url, file_path, clone_path):
 
 
 def apply(studio: Studio, project: list[str] = None, *kwargs):
-    studio_setting_bundle = bundles.get_production_bundle()
+    product_bundles_name = studio.get_productions_bundle()
+    studio_setting_bundle = studio.get_bundles()
+    target_name = product_bundles_name['bundleName']
+    bundles_to_compare = next((bundle for bundle in studio_setting_bundle.get("bundles", []) if bundle.get("name") == target_name), None)
     github_data = fetch_file_contents(config.REPOSITORY_URL, studio.bundle_config_file, config.REPOSITORY_DIR)
 
-    if compare_dicts(github_data, studio_setting_bundle):
+    if compare_dicts(github_data, bundles_to_compare):
         return None
     else:
-        for addon in github_data["addons"]:
-            addon_name = addon["name"]
-            version = addon["version"]
-            settings = addon["settings"]
-
-            try:
-                addons.set_studio_settings(addon_name, version, settings)
-            except requests.HTTPError as e:
-                print(f"Ошибка {addon_name} версии {version}: {e}")
+        return studio.update_bundle(github_data, target_name)

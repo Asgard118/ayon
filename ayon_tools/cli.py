@@ -10,15 +10,8 @@ def cli():
 
 @cli.command()
 @click.argument("studio", type=str, required=False)
-def info(studio):
-
-    if studio:
-        click.echo(f'Show info for studio "{studio}"')
-
-        info_tools.show_studio_info(Studio(studio))
-    else:
-        click.echo("Show all studios info")
-        info_tools.all_studios_info()
+def info(studio_name: str | None):
+    info_tools.show_studio_info(studio_name)
 
 
 @cli.command()
@@ -27,6 +20,7 @@ def info(studio):
 def apply(studio, project):
     click.echo(f"Apply settings if studio {studio} for project {project}")
 
+    "создать, если нету аддона, применить настройки"
 
 @cli.command()
 @click.argument("studio", type=str, required=True)

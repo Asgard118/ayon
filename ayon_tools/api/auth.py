@@ -37,4 +37,4 @@ class Auth:
         GlobalContext._connection = self._prev_connection
 
 
-default_auth = Auth()
+default_auth = Auth("http://192.168.1.83:5000", "9720fa2803bb488a84877038bdc6dda5")

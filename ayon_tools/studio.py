@@ -3,6 +3,7 @@ from . import config
 
 
 class Studio:
+    bundle_config_file = "bundle/bundles_settings.json"
     def __init__(self, name: str):
 
         self.name = name
@@ -33,5 +34,14 @@ class Studio:
     def get_bundle_data(self, name: str):
         return bundles.get_bundle(name, auth=self.auth)
 
+    def get_bundles(self):
+        return bundles.get_bundles(auth=self.auth)
+
+    def get_productions_bundle(self):
+        return bundles.get_production_bundle(auth=self.auth)
+
     def get_project_anatomy_data(self, project_name: str):
         return anatomy.get_project_anatomy(project_name, auth=self.auth)
+
+    def update_bundle(self, settings: dict, bundle_name: str):
+        return bundles.update_bundle(settings, bundle_name, auth=self.auth)
