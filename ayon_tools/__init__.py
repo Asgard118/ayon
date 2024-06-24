@@ -1,2 +1,4 @@
 import os
-os.environ['USE_AYON_SERVER'] = '1'
+from . import logging_setup
+
+os.environ["USE_AYON_SERVER"] = "1"
