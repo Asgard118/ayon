@@ -1,4 +1,4 @@
-from ayon_tools.addon import Addon
+from ayon_tools.base_addon import Addon
 
 
 class MyAddonName(Addon): ...
