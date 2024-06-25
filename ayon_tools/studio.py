@@ -69,38 +69,42 @@ class StudioSettings:
         )
 
     # studio from repo
-    def get_actual_bundle(self):
+    def get_rep_bundle(self):
         """
-        Актуальный состав бандла
+        Актуальный состав бандла из репозитория
         """
+        # return Bundle(self).get_settings()
         return repo.get_file_content(self.name, "bundle/bundle_settings.json")
 
-    def get_actual_addon_settings(self, addon_name: str):
+    def get_rep_addon_settings(self, addon_name: str):
         """
         Актуальные студийные настройки аддона из репозитория
         """
         # TODO
 
-    def get_actual_anatomy(self, project: str = None):
+    def get_rep_anatomy(self, project: str = None):
         """
         Актуальный пресет анатомии из репозитория
         """
-        # TODO
+        anatomy = repo.get_file_content(self.name, "josn/anatomy.json")
+        if project:
+            ...
+        return anatomy
 
-    def get_actual_attributes(self):
+    def get_rep_attributes(self):
         """
         Актуальные студийные атрибуты из репозитория
         """
         # TODO
 
     # project from repo
-    def get_actual_project_anatomy(self, project_name: str):
+    def get_rep_project_anatomy(self, project_name: str):
         """
         Актуальная анатомия проекта
         """
         # TODO
 
-    def get_actual_project_addons(self):
+    def get_rep_project_addons(self):
         """
         Настройки всех аддонов проекта.
         Структура настроек должна подходить под указанные в бандле версии

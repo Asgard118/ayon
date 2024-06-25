@@ -1,9 +1,7 @@
 from ayon_tools.studio import StudioSettings
 
 
-def check_settings_match(
-    studio: StudioSettings, verbose: int = False, **kwargs
-) -> bool:
+def check_settings_match(studio: StudioSettings, **kwargs) -> bool:
     """
     Проверка соответствия настроек
     """
@@ -17,6 +15,7 @@ def check_settings_match(
         if not kwargs.get("stage")
         else studio.get_staging_bundle()
     )
+    # check addons
     remote_addons = remote_bundle["addons"]
     local_addons = studio.get_actual_bundle()["addons"]
     if not compare_dicts(remote_addons, local_addons):
@@ -31,22 +30,17 @@ def check_settings_match(
     return is_match
 
 
-def compare_dicts(dict1, dict2):
-    if dict1.keys() != dict2.keys():
-        return False
-
-    for key in dict1:
-        if isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
-            if not compare_dicts(dict1[key], dict2[key]):
-                return False
-        else:
-            if dict1[key] != dict2[key]:
-                return False
-
-    return True
-
-
-def apply_settings(studio: StudioSettings, verbose: int = False, **kwargs):
-    """
-    Apply settings to the studio
-    """
+def compare_dicts(dict1: dict, dict2: dict):
+    return dict1 == dict2
+    # if dict1.keys() != dict2.keys():
+    #     return False
+    #
+    # for key in dict1:
+    #     if isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
+    #         if not compare_dicts(dict1[key], dict2[key]):
+    #             return False
+    #     else:
+    #         if dict1[key] != dict2[key]:
+    #             return False
+    #
+    # return True

@@ -33,7 +33,7 @@ def apply(studio, project):
     from .commands import apply
 
     click.echo(f"Apply settings if studio {studio} for project {project}")
-    apply.process(studio)
+    apply.run(studio)
 
 
 @cli.command()
