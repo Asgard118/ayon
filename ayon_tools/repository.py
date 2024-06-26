@@ -1,5 +1,5 @@
 import logging
-
+import json
 import pygit2
 
 from . import config
@@ -44,7 +44,9 @@ class Repository:
         else:
             logging.debug(f"Already on branch {branch_name}")
 
-    def get_file_content(self, file_name: str, branch: str = None):
+    def get_file_content(
+        self, file_name: str, branch: str = None, as_json: bool = False
+    ):
         """
         Get file content from branch
         """
@@ -61,7 +63,10 @@ class Repository:
         except KeyError:
             raise FileNotFoundError(f"File {file_name} not found in branch {branch}")
         file_blob = self.repo[entry.id]
-        return file_blob.data
+        data = file_blob.data
+        if as_json:
+            data = json.loads(data)
+        return data
 
 
 repo = Repository()
