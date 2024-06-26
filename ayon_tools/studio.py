@@ -5,6 +5,8 @@ from .repository import repo
 
 class StudioSettings:
     bundle_config_file = "bundle/bundles_settings.json"
+    anatomy_config_file = "anatomy/anatomy.json"
+    attributes_config_file = "attributes/attributes.json"
 
     def __init__(self, name: str):
         self.name = name
@@ -65,19 +67,25 @@ class StudioSettings:
             addon_version,
             project_name,
             settings,
-            auth=self.auth,
+            auth=self.auth
         )
+
+    def set_anatomy(self, preset_name: str, preset: dict):
+        return anatomy.set_studio_anatomy_preset(preset_name, preset, auth=self.auth)
+
+    def get_default_anatomy_name(self):
+        return anatomy.get_anatomy_name(auth=self.auth)
 
     # studio from repo
     def get_rep_bundle(self):
         """
         Актуальный состав бандла из репозитория
         """
-        # return Bundle(self).get_settings()
-        return repo.get_file_content(self.name, "bundle/bundle_settings.json")
+        bundle = repo.get_file_content(self.bundle_config_file, self.name)
+        return bundle
 
     def get_rep_addon_settings(self, addon_name: str):
-        """
+       """
         Актуальные студийные настройки аддона из репозитория
         """
         # TODO
@@ -86,7 +94,7 @@ class StudioSettings:
         """
         Актуальный пресет анатомии из репозитория
         """
-        anatomy = repo.get_file_content(self.name, "josn/anatomy.json")
+        anatomy = repo.get_file_content(self.anatomy_config_file, self.name)
         if project:
             ...
         return anatomy
@@ -95,7 +103,8 @@ class StudioSettings:
         """
         Актуальные студийные атрибуты из репозитория
         """
-        # TODO
+        attributes = repo.get_file_content(self.attributes_config_file, self.name)
+        return attributes
 
     # project from repo
     def get_rep_project_anatomy(self, project_name: str):

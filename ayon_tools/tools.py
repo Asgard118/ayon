@@ -44,3 +44,14 @@ def compare_dicts(dict1: dict, dict2: dict):
     #             return False
     #
     # return True
+
+
+def convert_bytes_to_str(data):
+    if isinstance(data, bytes):
+        return data.decode('utf-8')
+    elif isinstance(data, dict):
+        return {k: convert_bytes_to_str(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [convert_bytes_to_str(v) for v in data]
+    else:
+        return data

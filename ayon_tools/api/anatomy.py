@@ -36,7 +36,7 @@ def set_studio_anatomy_preset(
     response = requests.put(
         url=url_put,
         headers=auth.HEADERS,
-        json=preset,
+        json=preset
     )
     response.raise_for_status()
 
@@ -78,3 +78,8 @@ def set_project_anatomy(project_name: str, anatomy: dict, auth: Auth = default_a
         json=anatomy,
     )
     response.raise_for_status()
+
+def get_anatomy_name(auth: Auth = default_auth):
+    with auth:
+        data = ayon_api.get_default_anatomy_preset_name()
+    return data
