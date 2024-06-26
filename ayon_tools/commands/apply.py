@@ -2,20 +2,17 @@ from ayon_tools.studio import StudioSettings
 from ayon_tools import tools
 import json
 
+
 def run(studio: StudioSettings, project: list[str] = None, **kwargs):
     # CHECK DIFF
     # projects = project or studio.get_all_projects()
 
     # apply anatomy
-    anatomy = studio.get_rep_anatomy()
-    conv_anatomy = tools.convert_bytes_to_str(anatomy)
-    anatomy_json = json.dumps(conv_anatomy)
+    repo_anatomy = studio.get_rep_anatomy()
     server_anatomy = studio.get_anatomy()
     preset_name = studio.get_default_anatomy_name()
-    if tools.compare_dicts(anatomy_json, server_anatomy):
-        return None
-    else:
-        studio.set_anatomy(preset_name, anatomy_json)
+    if not tools.compare_dicts(repo_anatomy, server_anatomy):
+        studio.set_anatomy(preset_name, repo_anatomy)
 
     # apply attributes
     attributes = studio.get_rep_attributes()
@@ -33,17 +30,21 @@ def run(studio: StudioSettings, project: list[str] = None, **kwargs):
     bundle_json = json.dumps(conv_bundle)
     product_bundles_name = studio.get_productions_bundle()
     studio_setting_bundle = studio.get_bundles()
-    target_name = product_bundles_name['bundleName']
-    server_bundle = next((bundle for bundle in studio_setting_bundle.get("bundles", []) if bundle.get("name") == target_name), None)
+    target_name = product_bundles_name["bundleName"]
+    server_bundle = next(
+        (
+            bundle
+            for bundle in studio_setting_bundle.get("bundles", [])
+            if bundle.get("name") == target_name
+        ),
+        None,
+    )
     if tools.compare_dicts(bundle_json, server_bundle):
         return None
     else:
         return studio.update_bundle(bundle_json, target_name)
 
-
     # appy studio settings
-
-
 
     # apply projects settings
     # for project in projects:
