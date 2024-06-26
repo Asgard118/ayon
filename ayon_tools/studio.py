@@ -81,7 +81,7 @@ class StudioSettings:
         """
         Актуальный состав бандла из репозитория
         """
-        bundle = repo.get_file_content(self.bundle_config_file, self.name)
+        bundle = repo.get_file_content(self.bundle_config_file, self.name, as_json=True)
         return bundle
 
     def get_rep_addon_settings(self, addon_name: str):
@@ -94,7 +94,7 @@ class StudioSettings:
         """
         Актуальный пресет анатомии из репозитория
         """
-        anatomy = repo.get_file_content(self.anatomy_config_file, self.name)
+        anatomy = repo.get_file_content(self.anatomy_config_file, self.name, as_json=True)
         if project:
             ...
         return anatomy
@@ -103,7 +103,7 @@ class StudioSettings:
         """
         Актуальные студийные атрибуты из репозитория
         """
-        attributes = repo.get_file_content(self.attributes_config_file, self.name)
+        attributes = repo.get_file_content(self.attributes_config_file, self.name, as_json=True)
         return attributes
 
     # project from repo
