@@ -1,4 +1,6 @@
 import logging
+import json
+from pathlib import Path
 
 import pygit2
 
@@ -61,7 +63,11 @@ class Repository:
         except KeyError:
             raise FileNotFoundError(f"File {file_name} not found in branch {branch}")
         file_blob = self.repo[entry.id]
-        return file_blob.data
+        data = file_blob.data
+        if Path(file_name).suffix == ".json":
+            data = json.loads(data)
+        # TODO: yaml/yml
+        return data
 
 
 repo = Repository()

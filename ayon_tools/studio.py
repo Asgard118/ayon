@@ -66,11 +66,7 @@ class StudioSettings:
         self, project_name: str, addon_name: str, addon_version: str, settings: dict
     ):
         return addons.set_project_settings(
-            addon_name,
-            addon_version,
-            project_name,
-            settings,
-            auth=self.auth
+            addon_name, addon_version, project_name, settings, auth=self.auth
         )
 
     def set_anatomy(self, preset_name: str, preset: dict):
@@ -88,7 +84,7 @@ class StudioSettings:
         return bundle
 
     def get_rep_addon_settings(self, addon_name: str):
-       """
+        """
         Актуальные студийные настройки аддона из репозитория
         """
         # TODO
