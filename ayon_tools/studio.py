@@ -33,6 +33,9 @@ class StudioSettings:
     def get_attributes(self):
         return attributes.get_attributes(auth=self.auth)
 
+    def set_attributes(self, attribute: str, data: dict):
+        return attributes.set_attributes(attribute, data, auth=self.auth)
+
     def get_bundle(self, bundle_name: str):
         return bundles.get_bundle(bundle_name, auth=self.auth)
 
