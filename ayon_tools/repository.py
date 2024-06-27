@@ -1,5 +1,7 @@
 import logging
 import json
+from pathlib import Path
+
 import pygit2
 
 from . import config
@@ -44,9 +46,7 @@ class Repository:
         else:
             logging.debug(f"Already on branch {branch_name}")
 
-    def get_file_content(
-        self, file_name: str, branch: str = None, as_json: bool = False
-    ):
+    def get_file_content(self, file_name: str, branch: str = None):
         """
         Get file content from branch
         """
@@ -64,8 +64,9 @@ class Repository:
             raise FileNotFoundError(f"File {file_name} not found in branch {branch}")
         file_blob = self.repo[entry.id]
         data = file_blob.data
-        if as_json:
+        if Path(file_name).suffix == ".json":
             data = json.loads(data)
+        # TODO: yaml/yml
         return data
 
 
