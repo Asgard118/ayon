@@ -7,6 +7,7 @@ class StudioSettings:
     bundle_config_file = "bundle/bundles_settings.json"
     anatomy_config_file = "anatomy/anatomy.json"
     attributes_config_file = "attributes/attributes.json"
+    studio_config_file = "studio/studio_settings.json"
 
     def __init__(self, name: str):
         self.name = name
@@ -26,6 +27,12 @@ class StudioSettings:
 
     def get_addon(self, name: str, ver: str):
         return addons.get_addon_studio_settings(name, ver, auth=self.auth)
+
+    def get_addons(self):
+        return addons.get_studio_settings(auth=self.auth)
+
+    def set_addon_settings(self, name: str, ver: str, settings: dict):
+        addons.set_studio_settings(name, ver, settings)
 
     def get_anatomy(self, preset_name: str = None):
         return anatomy.get_studio_anatomy_preset(preset_name, auth=self.auth)
@@ -83,11 +90,12 @@ class StudioSettings:
         bundle = repo.get_file_content(self.bundle_config_file, self.name)
         return bundle
 
-    def get_rep_addon_settings(self, addon_name: str):
+    def get_rep_addons_settings(self):
         """
-        Актуальные студийные настройки аддона из репозитория
+        Актуальные студийные настройки аддонов из репозитория
         """
-        # TODO
+        addons = repo.get_file_content(self.studio_config_file, self.name)
+        return addons
 
     def get_rep_anatomy(self, project: str = None):
         """

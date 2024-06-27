@@ -4,12 +4,12 @@ from .auth import default_auth, Auth
 
 
 # studio addon settings
-def get_studio_settings(bundle_name: str, auth: Auth = default_auth) -> dict:
+def get_studio_settings(auth: Auth = default_auth) -> dict:
     """
     Возвращает студийные настройки конкретного бандла
     """
     with auth:
-        data = ayon_api.get_addons_settings(bundle_name)
+        data = ayon_api.get_addons_settings()
     return data
 
 

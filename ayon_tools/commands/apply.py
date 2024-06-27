@@ -31,23 +31,33 @@ def run(studio: StudioSettings, project: list[str] = None, **kwargs):
 
 
     # apply bundle
-    repo_bundle = studio.get_rep_bundle()
+    github_data = studio.get_rep_bundle()
     product_bundles_name = studio.get_productions_bundle()
     studio_setting_bundle = studio.get_bundles()
-    target_name = product_bundles_name["bundleName"]
-    server_bundle = next(
+    target_name = product_bundles_name['bundleName']
+    bundles_to_compare = next(
         (
             bundle
             for bundle in studio_setting_bundle.get("bundles", [])
             if bundle.get("name") == target_name
         ),
-        None,
+        None
     )
-    if not tools.compare_dicts(repo_bundle, server_bundle):
-        studio.update_bundle(repo_bundle, target_name)
+    if not tools.compare_dicts(github_data, bundles_to_compare):
+        return studio.update_bundle(target_name, github_data)
 
 
     # appy studio settings
+    repo_addons = studio.get_rep_addons_settings()
+    server_addons = studio.get_addons()
+    bundle_with_addons = studio.get_rep_bundle()
+    if not tools.compare_dicts(repo_addons, server_addons):
+        for addon_name, settings_dict in repo_addons.items():
+            if addon_name in bundle_with_addons["addons"]:
+                version = bundle_with_addons["addons"][addon_name]
+                settings = settings_dict
+                studio.set_addon_settings(addon_name, version, settings)
+
 
     # apply projects settings
     # for project in projects:
