@@ -7,7 +7,7 @@ def check_settings_match(studio: StudioSettings, **kwargs) -> bool:
     """
     # check anatomy
     is_match = True
-    if not compare_dicts(studio.get_anatomy(), studio.get_actual_anatomy()):
+    if not compare_dicts(studio.get_anatomy(), studio.get_rep_anatomy()):
         is_match = False
     # check bundle
     remote_bundle = (
@@ -17,12 +17,12 @@ def check_settings_match(studio: StudioSettings, **kwargs) -> bool:
     )
     # check addons
     remote_addons = remote_bundle["addons"]
-    local_addons = studio.get_actual_bundle()["addons"]
+    local_addons = studio.get_rep_bundle()["addons"]
     if not compare_dicts(remote_addons, local_addons):
         is_match = False
 
     # check attributes
-    if not compare_dicts(studio.get_attributes(), studio.get_actual_attributes()):
+    if not compare_dicts(studio.get_attributes(), studio.get_rep_attributes()):
         is_match = False
 
     # check projects
@@ -44,6 +44,17 @@ def compare_dicts(dict1: dict, dict2: dict):
     #             return False
     #
     # return True
+
+def update_dict_with_changes(original: dict, updates: dict) -> dict:
+    """
+    Рекурсивно обновляет словарь original значениями из словаря updates.
+    """
+    for key, value in updates.items():
+        if isinstance(value, dict) and key in original and isinstance(original[key], dict):
+            update_dict_with_changes(original[key], value)
+        else:
+            original[key] = value
+    return original
 
 
 def convert_bytes_to_str(data):

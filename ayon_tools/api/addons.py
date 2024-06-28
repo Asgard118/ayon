@@ -20,7 +20,10 @@ def get_addon_studio_settings(name: str, ver: str, auth: Auth = default_auth):
 
 
 def set_studio_settings(
-    addon_name: str, version: str, settings: dict, auth: Auth = default_auth
+    addon_name: str,
+    version: str,
+    settings: dict,
+    auth: Auth = default_auth
 ):
     """
     Обновление конкретной версии аддона, по определенным настройкам
@@ -48,7 +51,7 @@ def set_project_settings(
     version: str,
     project_name: str,
     settings: dict,
-    auth: Auth = default_auth,
+    auth: Auth = default_auth
 ):
     """
     Обновляет конкретную версию аддона проекта
@@ -59,3 +62,8 @@ def set_project_settings(
         json=settings,
     )
     response.raise_for_status()
+
+
+def update_project(auth: Auth = default_auth, *args: any, **kwargs: any):
+    with auth:
+        return ayon_api.update_project(*args, **kwargs)

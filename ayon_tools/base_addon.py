@@ -28,3 +28,6 @@ class Addon:
         # TODO: apply shortcuts
         # TODO: apply project shortcuts
         return settings
+
+    def get_custom_attributes(self):
+        pass

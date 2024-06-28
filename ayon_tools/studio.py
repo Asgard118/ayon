@@ -8,6 +8,9 @@ class StudioSettings:
     anatomy_config_file = "anatomy/anatomy.json"
     attributes_config_file = "attributes/attributes.json"
     studio_config_file = "studio/studio_settings.json"
+    project_settings = "projects/{project}/project_settings.json"
+    project_anatomy = "projects/{project}/project_anatomy.json"
+
 
     def __init__(self, name: str):
         self.name = name
@@ -23,8 +26,9 @@ class StudioSettings:
             raise ValueError("Invalid config file")
         return studio_local_config
 
-    # studio configs
 
+
+    # studio configs
     def get_addon(self, name: str, ver: str):
         return addons.get_addon_studio_settings(name, ver, auth=self.auth)
 
@@ -58,8 +62,10 @@ class StudioSettings:
     def get_staging_bundle(self):
         return bundles.get_staging_bundle(auth=self.auth)
 
-    # project configs
 
+
+
+    # project configs
     def get_project_anatomy(self, project_name: str):
         return anatomy.get_project_anatomy(project_name, auth=self.auth)
 
@@ -82,7 +88,12 @@ class StudioSettings:
     def get_default_anatomy_name(self):
         return anatomy.get_anatomy_name(auth=self.auth)
 
-    # studio from repo
+    def update_project(self, *args, **kwargs):
+        return addons.update_project(auth=self.auth, *args, **kwargs)
+
+
+
+# studio from repo
     def get_rep_bundle(self):
         """
         Актуальный состав бандла из репозитория
@@ -90,11 +101,16 @@ class StudioSettings:
         bundle = repo.get_file_content(self.bundle_config_file, self.name)
         return bundle
 
-    def get_rep_addons_settings(self):
+    def get_rep_addons_settings(self, project: str = None):
         """
         Актуальные студийные настройки аддонов из репозитория
         """
         addons = repo.get_file_content(self.studio_config_file, self.name)
+        if project:
+            from . import tools
+            project_addons = repo.get_file_content(self.project_settings.format(project=project), self.name)
+            if not tools.compare_dicts(addons, project_addons):
+                tools.update_dict_with_changes(addons, project_addons)
         return addons
 
     def get_rep_anatomy(self, project: str = None):
@@ -103,7 +119,10 @@ class StudioSettings:
         """
         anatomy = repo.get_file_content(self.anatomy_config_file, self.name)
         if project:
-            ...
+            from . import tools
+            project_anatomy = repo.get_file_content(self.project_anatomy.format(project=project), self.name)
+            if not tools.compare_dicts(anatomy, project_anatomy):
+                tools.update_dict_with_changes(anatomy, project_anatomy)
         return anatomy
 
     def get_rep_attributes(self):
@@ -111,6 +130,7 @@ class StudioSettings:
         Актуальные студийные атрибуты из репозитория
         """
         attributes = repo.get_file_content(self.attributes_config_file, self.name)
+        # iterate addons
         return attributes
 
     # project from repo

@@ -1,9 +1,8 @@
 from ayon_tools.studio import StudioSettings
 from ayon_tools import tools
-import json
 
 
-def run(studio: StudioSettings, project: list[str] = None, **kwargs):
+def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
     # CHECK DIFF
     # projects = project or studio.get_all_projects()
 
@@ -60,8 +59,13 @@ def run(studio: StudioSettings, project: list[str] = None, **kwargs):
 
 
     # apply projects settings
-    # for project in projects:
-    #     anatomy = studio.get_actual_anatomy(project)
-    #     studio.set_project_anatomy(project, anatomy)
-    #     studio.set_project_addon_settings(...)
+    for project in projects:
+        anatomy = studio.get_rep_anatomy(project)
+        settings_project = studio.get_rep_addons_settings(project)
+        studio.set_project_anatomy(project, anatomy)
+        for addon_name, settings_dict in settings_project.items():
+            if addon_name in bundle_with_addons["addons"]:
+                version = bundle_with_addons["addons"][addon_name]
+                settings = settings_dict
+                studio.set_project_addon_settings(project, addon_name, version, settings)
     # CHECK DIFF
