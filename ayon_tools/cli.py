@@ -8,10 +8,10 @@ def cli():
 
 @cli.command()
 @click.argument("studio", type=str, required=False)
-def info(studio_name: str | None):
-    from .commands import info_tools
+def info(studio_name: str or None):
+    from .commands import info
 
-    info_tools.show_studio_info(studio_name)
+    info.process(studio_name)
 
 
 @cli.command()

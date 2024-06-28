@@ -10,6 +10,7 @@ python = "^3.9"
 ayon-python-api = "1.0.7"
 black = "^24.4.2"
 pygit2 = "^1.15.0"
+pyyaml = "^6.0.1"
 
 
 [build-system]

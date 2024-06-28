@@ -1,2 +1,5 @@
 addons:
   my_addon: "1.1"
+  settings+:
+    key: 1
+    value: 2

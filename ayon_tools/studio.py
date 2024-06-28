@@ -1,21 +1,22 @@
-from .api import anatomy, bundles, attributes, auth, addons
+import logging
+
+from . import api
 from . import config
 from .repository import repo
 
 
 class StudioSettings:
     bundle_config_file = "bundle/bundles_settings.json"
-    anatomy_config_file = "anatomy/anatomy.json"
+    anatomy_config_file = "defaults/anatomy.json"
     attributes_config_file = "attributes/attributes.json"
     studio_config_file = "studio/studio_settings.json"
-    project_settings = "projects/{project}/project_settings.json"
-    project_anatomy = "projects/{project}/project_anatomy.json"
-
+    project_settings_file = "projects/{project}/project_settings.json"
+    project_anatomy_file = "projects/{project}/project_anatomy.json"
 
     def __init__(self, name: str):
         self.name = name
         studio_config = self.get_config_data()
-        self.auth = auth.Auth(**studio_config)
+        self.auth = api.auth.Auth(**studio_config)
 
     def get_config_data(self):
         studio_local_config = config.get_studio_local_config(self.name)
@@ -26,74 +27,74 @@ class StudioSettings:
             raise ValueError("Invalid config file")
         return studio_local_config
 
-
-
     # studio configs
     def get_addon(self, name: str, ver: str):
-        return addons.get_addon_studio_settings(name, ver, auth=self.auth)
+        return api.addons.get_addon_studio_settings(name, ver, auth=self.auth)
 
     def get_addons(self):
-        return addons.get_studio_settings(auth=self.auth)
+        return api.addons.get_studio_settings(auth=self.auth)
 
     def set_addon_settings(self, name: str, ver: str, settings: dict):
-        addons.set_studio_settings(name, ver, settings)
+        api.addons.set_studio_settings(name, ver, settings)
 
     def get_anatomy(self, preset_name: str = None):
-        return anatomy.get_studio_anatomy_preset(preset_name, auth=self.auth)
+        return api.anatomy.get_studio_anatomy_preset(preset_name, auth=self.auth)
 
     def get_attributes(self):
-        return attributes.get_attributes(auth=self.auth)
+        return api.attributes.get_attributes(auth=self.auth)
 
     def set_attributes(self, attribute: str, data: dict):
-        return attributes.set_attributes(attribute, data, auth=self.auth)
+        return api.attributes.set_attributes(attribute, data, auth=self.auth)
 
     def get_bundle(self, bundle_name: str):
-        return bundles.get_bundle(bundle_name, auth=self.auth)
+        return api.bundles.get_bundle(bundle_name, auth=self.auth)
 
     def get_bundles(self):
-        return bundles.get_bundles(auth=self.auth)
+        return api.bundles.get_bundles(auth=self.auth)
 
     def update_bundle(self, bundle_name: str, settings: dict):
-        return bundles.update_bundle(bundle_name, settings, auth=self.auth)
+        return api.bundles.update_bundle(bundle_name, settings, auth=self.auth)
 
     def get_productions_bundle(self):
-        return bundles.get_production_bundle(auth=self.auth)
+        return api.bundles.get_production_bundle(auth=self.auth)
 
     def get_staging_bundle(self):
-        return bundles.get_staging_bundle(auth=self.auth)
+        return api.bundles.get_staging_bundle(auth=self.auth)
 
-
-
+    def create_bundle(self, name: str, addon_list: dict, installer_version: str):
+        return api.bundles.create_bundle(
+            name, addon_list, installer_version, auth=self.auth
+        )
 
     # project configs
     def get_project_anatomy(self, project_name: str):
-        return anatomy.get_project_anatomy(project_name, auth=self.auth)
+        return api.anatomy.get_project_anatomy(project_name, auth=self.auth)
 
     def set_project_anatomy(self, project_name: str, settings: dict):
-        return anatomy.set_project_anatomy(project_name, settings, auth=self.auth)
+        return api.anatomy.set_project_anatomy(project_name, settings, auth=self.auth)
 
     def get_project_addons_settings(self, project_name: str):
-        return addons.get_project_settings(project_name, auth=self.auth)
+        return api.addons.get_project_settings(project_name, auth=self.auth)
 
     def set_project_addon_settings(
         self, project_name: str, addon_name: str, addon_version: str, settings: dict
     ):
-        return addons.set_project_settings(
+        return api.addons.set_project_settings(
             addon_name, addon_version, project_name, settings, auth=self.auth
         )
 
     def set_anatomy(self, preset_name: str, preset: dict):
-        return anatomy.set_studio_anatomy_preset(preset_name, preset, auth=self.auth)
+        return api.anatomy.set_studio_anatomy_preset(
+            preset_name, preset, auth=self.auth
+        )
 
     def get_default_anatomy_name(self):
-        return anatomy.get_anatomy_name(auth=self.auth)
+        return api.anatomy.get_anatomy_name(auth=self.auth)
 
     def update_project(self, *args, **kwargs):
-        return addons.update_project(auth=self.auth, *args, **kwargs)
+        return api.addons.update_project(auth=self.auth, *args, **kwargs)
 
-
-
-# studio from repo
+    # studio from repo
     def get_rep_bundle(self):
         """
         Актуальный состав бандла из репозитория
@@ -108,8 +109,14 @@ class StudioSettings:
         addons = repo.get_file_content(self.studio_config_file, self.name)
         if project:
             from . import tools
-            project_addons = repo.get_file_content(self.project_settings.format(project=project), self.name)
-            if not tools.compare_dicts(addons, project_addons):
+
+            try:
+                project_addons = repo.get_file_content(
+                    self.project_settings_file.format(project=project), self.name
+                )
+            except FileNotFoundError:
+                logging.debug("No project overrides")
+            else:
                 tools.update_dict_with_changes(addons, project_addons)
         return addons
 
@@ -120,7 +127,10 @@ class StudioSettings:
         anatomy = repo.get_file_content(self.anatomy_config_file, self.name)
         if project:
             from . import tools
-            project_anatomy = repo.get_file_content(self.project_anatomy.format(project=project), self.name)
+
+            project_anatomy = repo.get_file_content(
+                self.project_anatomy_file.format(project=project), self.name
+            )
             if not tools.compare_dicts(anatomy, project_anatomy):
                 tools.update_dict_with_changes(anatomy, project_anatomy)
         return anatomy

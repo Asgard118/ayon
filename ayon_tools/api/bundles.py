@@ -44,8 +44,8 @@ def get_production_bundle(auth: Auth = default_auth) -> dict:
     Функция возвращает настройки бандла в статусе production
     """
     with auth:
-        data = get_bundle_settings()
-    return data
+        data = get_bundles().get("bundles", [])
+    return next((item for item in data if item.get("isProduction")), None)
 
 
 def get_staging_bundle(auth: Auth = default_auth) -> dict:
