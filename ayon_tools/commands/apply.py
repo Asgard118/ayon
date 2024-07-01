@@ -1,3 +1,5 @@
+import logging
+
 from ayon_tools.studio import StudioSettings
 from ayon_tools import tools
 
@@ -5,51 +7,79 @@ from ayon_tools import tools
 def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
     if isinstance(studio, str):
         studio = StudioSettings(studio)
-    # CHECK DIFF
-    # projects = project or studio.get_all_projects()
+    # COLLECT DATA
 
     # apply anatomy
+    # if kwargs.get('anatomy', True):
     repo_anatomy = studio.get_rep_anatomy()
-    print(len(repo_anatomy))
+    if not repo_anatomy:
+        raise Exception('Wrong repository anatomy data')
+
     server_anatomy = studio.get_anatomy()
-    print(len(server_anatomy))
+    if not server_anatomy:
+        raise Exception('Wrong server anatomy data')
+
     preset_name = studio.get_default_anatomy_name()
-    print(preset_name)
-    return  # WIP
+    logging.info('Default preset name: %s', preset_name)
+
     if not tools.compare_dicts(repo_anatomy, server_anatomy):
         studio.set_anatomy(preset_name, repo_anatomy)
 
+    # COMPARE
+
+    # APPLY DIFFS or SHOW DIFFS
+
     # apply attributes
     repo_attributes = studio.get_rep_attributes()
+    if not repo_attributes:
+        raise Exception('Wrong repository attributes data')
+
     server_attributes = studio.get_attributes()
-    if not tools.compare_dicts(repo_attributes, server_attributes):
-        for attribute in repo_attributes["attributes"]:
-            name_attributes = attribute["name"]
-            data_conf = {
-                "position": attribute["position"],
-                "scope": attribute["scope"],
-                "builtin": attribute["builtin"],
-                "data": attribute["data"],
-            }
-            studio.set_attributes(name_attributes, data_conf)
+    if not server_attributes:
+        raise Exception('Wrong server attributes data')
+
+    # if not tools.compare_dicts(repo_attributes, server_attributes):
+    #     for attribute in repo_attributes["attributes"]:
+    #         name_attributes = attribute["name"]
+    #         data_conf = {
+    #             "position": attribute["position"],
+    #             "scope": attribute["scope"],
+    #             "builtin": attribute["builtin"],
+    #             "data": attribute["data"],
+    #         }
+    #         studio.set_attributes(name_attributes, data_conf)
 
     # apply bundle
     repo_bundle = studio.get_rep_bundle()
+    if not repo_bundle:
+        raise Exception('Wrong repository bundle data')
+
     if kwargs.get("stage"):
         bundle_name = "staging"
         server_bundle = studio.get_productions_bundle()
+
     else:
         bundle_name = "production"
         server_bundle = studio.get_staging_bundle()
+
     if not server_bundle:
         installer_version = "1.0.2"  # TODO get from configs
         studio.create_bundle(bundle_name, repo_bundle, installer_version)
-    else:
-        if not tools.compare_dicts(repo_bundle, server_bundle):
-            return studio.update_bundle(server_bundle, repo_bundle)
+        logging.info('Create bundle: %s', bundle_name)
+
+    # else:
+    #     if not tools.compare_dicts(repo_bundle, server_bundle):
+    #         return studio.update_bundle(server_bundle, repo_bundle)
 
     # appy studio settings
+
     repo_addons = studio.get_rep_addons_settings()
+    if not repo_addons:
+        raise Exception('Wrong repository bundle data')
+    print(repo_addons)
+    return
+
+
     server_addons = studio.get_addons()
     bundle_with_addons = studio.get_rep_bundle()
     if not tools.compare_dicts(repo_addons, server_addons):

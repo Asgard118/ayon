@@ -6,10 +6,10 @@ from .repository import repo
 
 
 class StudioSettings:
-    bundle_config_file = "bundle/bundles_settings.json"
+    bundle_config_file = "defaults/bundle.json"
     anatomy_config_file = "defaults/anatomy.json"
-    attributes_config_file = "attributes/attributes.json"
-    studio_config_file = "studio/studio_settings.json"
+    attributes_config_file = "defaults/attributes.json"
+    studio_config_file = "addons/{addon_name}/default.json"
     project_settings_file = "projects/{project}/project_settings.json"
     project_anatomy_file = "projects/{project}/project_anatomy.json"
 
@@ -17,6 +17,10 @@ class StudioSettings:
         self.name = name
         studio_config = self.get_config_data()
         self.auth = api.auth.Auth(**studio_config)
+
+
+    def get_rep_pop(self):
+        pass
 
     def get_config_data(self):
         studio_local_config = config.get_studio_local_config(self.name)
@@ -102,11 +106,13 @@ class StudioSettings:
         bundle = repo.get_file_content(self.bundle_config_file, self.name)
         return bundle
 
-    def get_rep_addons_settings(self, project: str = None):
+    # пока не придумал как обозначить путь в случае, если не указан аддон. Планирую реализовать через чтения дефолтног
+    # дефолтного бандла и подставление названий аддона от туда
+    def get_rep_addons_settings(self, addon_name: str = "nuke", project: str = None):
         """
         Актуальные студийные настройки аддонов из репозитория
         """
-        addons = repo.get_file_content(self.studio_config_file, self.name)
+        addons = repo.get_file_content(self.studio_config_file.format(addon_name=addon_name), self.name)
         if project:
             from . import tools
 
@@ -158,3 +164,4 @@ class StudioSettings:
         # TODO
 
     # utils
+
