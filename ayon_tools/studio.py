@@ -18,9 +18,11 @@ class StudioSettings:
         studio_config = self.get_config_data()
         self.auth = api.auth.Auth(**studio_config)
 
-
     def get_rep_pop(self):
         pass
+
+    def get_projects(self) -> list:
+        return []
 
     def get_config_data(self):
         studio_local_config = config.get_studio_local_config(self.name)
@@ -32,7 +34,7 @@ class StudioSettings:
         return studio_local_config
 
     # studio configs
-    def get_addon(self, name: str, ver: str):
+    def get_addon_settings(self, name: str, ver: str):
         return api.addons.get_addon_studio_settings(name, ver, auth=self.auth)
 
     def get_addons(self):
@@ -47,8 +49,9 @@ class StudioSettings:
     def get_attributes(self):
         return api.attributes.get_attributes(auth=self.auth)
 
-    def set_attributes(self, attribute: str, data: dict):
-        return api.attributes.set_attributes(attribute, data, auth=self.auth)
+    def set_attributes(self, attributes: dict):
+        for attr, data in attributes.items():
+            api.attributes.set_attributes(attr, data, auth=self.auth)
 
     def get_bundle(self, bundle_name: str):
         return api.bundles.get_bundle(bundle_name, auth=self.auth)
@@ -65,7 +68,9 @@ class StudioSettings:
     def get_staging_bundle(self):
         return api.bundles.get_staging_bundle(auth=self.auth)
 
-    def create_bundle(self, name: str, addon_list: dict, installer_version: str):
+    def create_bundle(self, name: str, data: dict):
+        installer_version: str = data["installer_version"]
+        addon_list = data["addons"]
         return api.bundles.create_bundle(
             name, addon_list, installer_version, auth=self.auth
         )
@@ -87,13 +92,12 @@ class StudioSettings:
             addon_name, addon_version, project_name, settings, auth=self.auth
         )
 
-    def set_anatomy(self, preset_name: str, preset: dict):
+    def set_anatomy_preset(self, preset_name: str, preset: dict):
         return api.anatomy.set_studio_anatomy_preset(
             preset_name, preset, auth=self.auth
         )
 
-
-    def get_default_anatomy_name(self):
+    def get_default_anatomy_preset_name(self):
         return api.anatomy.get_anatomy_name(auth=self.auth)
 
     def update_project(self, *args, **kwargs):
@@ -107,13 +111,13 @@ class StudioSettings:
         bundle = repo.get_file_content(self.bundle_config_file, self.name)
         return bundle
 
-    # пока не придумал как обозначить путь в случае, если не указан аддон. Планирую реализовать через чтения дефолтног
-    # дефолтного бандла и подставление названий аддона от туда
-    def get_rep_addons_settings(self, addon_name: str = "nuke", project: str = None):
+    def get_rep_addon_settings(self, addon_name: str, project: str = None):
         """
-        Актуальные студийные настройки аддонов из репозитория
+        Актуальные студийные настройки аддона из репозитория
         """
-        addons = repo.get_file_content(self.studio_config_file.format(addon_name=addon_name), self.name)
+        addons = repo.get_file_content(
+            self.studio_config_file.format(addon_name=addon_name), self.name
+        )
         if project:
             from . import tools
 
@@ -165,4 +169,3 @@ class StudioSettings:
         # TODO
 
     # utils
-
