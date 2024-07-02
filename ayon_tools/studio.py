@@ -9,7 +9,7 @@ class StudioSettings:
     bundle_config_file = "defaults/bundle.json"
     anatomy_config_file = "defaults/anatomy.json"
     attributes_config_file = "defaults/attributes.json"
-    studio_config_file = "addons/{addon_name}/default.json"
+    studio_config_file = "addons/{addon_name}/defaults.json"
     project_settings_file = "projects/{project}/project_settings.json"
     project_anatomy_file = "projects/{project}/project_anatomy.json"
 
@@ -91,6 +91,7 @@ class StudioSettings:
         return api.anatomy.set_studio_anatomy_preset(
             preset_name, preset, auth=self.auth
         )
+
 
     def get_default_anatomy_name(self):
         return api.anatomy.get_anatomy_name(auth=self.auth)

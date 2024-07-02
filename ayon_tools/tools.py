@@ -1,4 +1,5 @@
 from ayon_tools.studio import StudioSettings
+import json
 
 
 def check_settings_match(studio: StudioSettings, **kwargs) -> bool:
@@ -29,9 +30,12 @@ def check_settings_match(studio: StudioSettings, **kwargs) -> bool:
     # TODO
     return is_match
 
+def deep_compare(dict1, dict2):
+    return json.dumps(dict1, sort_keys=True) == json.dumps(dict2, sort_keys=True)
+
 
 def compare_dicts(dict1: dict, dict2: dict):
-    return dict1 == dict2
+        return dict1 == dict2
     # if dict1.keys() != dict2.keys():
     #     return False
     #
@@ -115,3 +119,32 @@ def merge_dict(dict1, dict2):
         return d1
 
     return merge_recursive(dict1.copy(), dict2)
+
+
+from collections.abc import Mapping
+
+
+def compare_dicts_diff(dict1, dict2, path=""):
+    differences = []
+
+    def compare(v1, v2, path):
+        if isinstance(v1, Mapping) and isinstance(v2, Mapping):
+            for k in set(v1.keys()) | set(v2.keys()):
+                if k not in v1:
+                    differences.append(f"{path}{k}: Missing in first dictionary")
+                elif k not in v2:
+                    differences.append(f"{path}{k}: Missing in second dictionary")
+                else:
+                    compare(v1[k], v2[k], f"{path}{k}.")
+        elif isinstance(v1, list) and isinstance(v2, list):
+            if len(v1) != len(v2):
+                differences.append(f"{path}: Lists have different lengths")
+            for i, (item1, item2) in enumerate(zip(v1, v2)):
+                compare(item1, item2, f"{path}[{i}].")
+        elif v1 != v2:
+            differences.append(f"{path[:-1]}: {v1} != {v2}")
+
+    compare(dict1, dict2, path)
+    return differences
+
+

@@ -38,7 +38,7 @@ def set_studio_anatomy_preset(
         headers=auth.HEADERS,
         json=preset
     )
-    response.raise_for_status()
+    return response.raise_for_status()
 
 
 def create_studio_anatomy_preset(
