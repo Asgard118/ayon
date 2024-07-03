@@ -2,6 +2,7 @@ import logging
 
 from . import api
 from . import config
+from .base_shortcut_solver import Solver
 from .repository import repo
 
 
@@ -12,18 +13,12 @@ class StudioSettings:
     studio_config_file = "addons/{addon_name}/defaults.json"
     project_settings_file = "projects/{project}/project_settings.json"
     project_anatomy_file = "projects/{project}/project_anatomy.json"
-    default_settings = "default"
+    anatomy_preset_default_name = "default"
 
     def __init__(self, name: str):
         self.name = name
         studio_config = self.get_config_data()
         self.auth = api.auth.Auth(**studio_config)
-
-    def get_rep_pop(self):
-        pass
-
-    def get_projects(self) -> list:
-        return []
 
     def get_config_data(self):
         studio_local_config = config.get_studio_local_config(self.name)
@@ -34,25 +29,136 @@ class StudioSettings:
             raise ValueError("Invalid config file")
         return studio_local_config
 
-    # studio configs
-    def get_addon_settings(self, name: str, ver: str):
-        return api.addons.get_addon_studio_settings(name, ver, auth=self.auth)
+    # SERVER ##################################################################
+
+    def get_projects(self) -> list:
+        # TODO
+        return []
+
+    # studio addon settings
 
     def get_addons(self):
         return api.addons.get_studio_settings(auth=self.auth)
 
+    def get_addon_settings(self, name: str, ver: str):
+        return api.addons.get_addon_studio_settings(name, ver, auth=self.auth)
+
     def set_addon_settings(self, name: str, ver: str, settings: dict):
         api.addons.set_studio_settings(name, ver, settings)
 
-    def get_anatomy(self, preset_name: str = None):
+    # anatomy
+
+    def get_anatomy_presets(self):
+        """
+        Список пресетов анатомии
+         [
+            {'name': 'preset_name',
+             'primary': False,
+             'version': '1.0.0'
+             },
+             ...
+         ]
+        """
+        return api.anatomy.get_studio_anatomy_presets(auth=self.auth)
+
+    def get_anatomy_preset_names(self):
+        """
+        Список имён пресетов анатомии
+         [
+            'preset_name1',
+            'preset_name2',
+            ...
+         ]
+        """
+        presets = self.get_anatomy_presets()
+        return [preset["name"] for preset in presets]
+
+    def get_builtin_anatomy_preset(self):
+        """
+        Базовый пресет анатомии
+        """
+        return api.anatomy.get_build_in_anatomy_preset(auth=self.auth)
+
+    def get_anatomy_preset(self, preset_name: str = None):
+        """
+        Получение пресета анатомии
+        """
+        if not preset_name:
+            return self.get_default_anatomy_preset()
+        if preset_name not in self.get_anatomy_preset_names():
+            raise NameError(f"Preset named {preset_name} not exists")
         return api.anatomy.get_studio_anatomy_preset(preset_name, auth=self.auth)
 
-    def set_primary(self, preset_name: str):
+    def create_anatomy_preset(self, preset_name: str, preset_data: dict = None):
+        """
+        Создание нового пресета анатомии
+        Если не указать данные пресета то будет использоваться базовый built-in пресет
+        """
+        if preset_name in self.get_anatomy_preset_names():
+            raise NameError(f"Preset named {preset_name} already exists")
+        preset_data = preset_data or self.get_builtin_anatomy_preset()
+        return api.anatomy.create_studio_anatomy_preset(
+            preset_name, preset_data, auth=self.auth
+        )
+
+    def delete_anatomy_preset(self, preset_name: str):
+        """
+        Удаление пресета анатомии
+        """
+        return api.anatomy.delete_anatomy_preset(preset_name, auth=self.auth)
+
+    def update_anatomy_preset(self, preset_name: str, preset_data: dict):
+        """
+        Обновление пресета анатомии. Данные должны быть полностью совместимы с AYON Server API
+        """
+        if preset_name not in self.get_anatomy_preset_names():
+            raise NameError(f"Preset named {preset_name} not exists")
+        return api.anatomy.set_studio_anatomy_preset(
+            preset_name, preset_data, auth=self.auth
+        )
+
+    def set_primary_anatomy_preset(self, preset_name: str):
+        """
+        Сделать пресет PRIMARY
+        """
+        if preset_name not in self.get_anatomy_preset_names():
+            raise NameError(f"Preset named {preset_name} not exists")
         return api.anatomy.set_primary_preset(preset_name, auth=self.auth)
 
-    def create_anatomy(self, preset_name: str, preset: dict):
-        return api.anatomy.create_studio_anatomy_preset(preset_name, preset, auth=self.auth)
+    def get_default_anatomy_preset(self):
+        """
+        Возвращает данные дефолтного пресета студии
+        """
+        try:
+            name = self.get_default_anatomy_preset_name()
+        except NameError:
+            name = self.create_default_anatomy_preset()
+        return self.get_anatomy_preset(name)
 
+    def get_default_anatomy_preset_name(self):
+        """
+        Возвращает имя дефолтного пресета студии если он есть на сервере
+        """
+        existing_names = self.get_anatomy_preset_names()
+        if self.anatomy_preset_default_name not in existing_names:
+            raise NameError(
+                f"Default preset {self.anatomy_preset_default_name} not found"
+            )
+        return self.anatomy_preset_default_name
+
+    def create_default_anatomy_preset(self):
+        """
+        Создает дефолтный пресет анатомии если его нет на сервере
+        """
+        if self.anatomy_preset_default_name in self.get_anatomy_preset_names():
+            raise NameError(
+                f"Default preset {self.anatomy_preset_default_name} already exists"
+            )
+        self.create_anatomy_preset(self.anatomy_preset_default_name)
+        self.set_primary_anatomy_preset(self.anatomy_preset_default_name)
+        return self.anatomy_preset_default_name
+
+    # attributes
     def get_attributes(self):
         return api.attributes.get_attributes(auth=self.auth)
 
@@ -99,21 +205,36 @@ class StudioSettings:
             addon_name, addon_version, project_name, settings, auth=self.auth
         )
 
-    def set_anatomy_preset(self, preset_name: str, preset: dict):
-        return api.anatomy.set_studio_anatomy_preset(
-            preset_name, preset, auth=self.auth
-        )
-
-    def get_anatomy_presets(self):
-        return api.anatomy.get_studio_anatomy_presets_names(auth=self.auth)
-
-    def get_default_anatomy_preset_name(self, compare_name: str, rep_preset: dict):
-        return api.anatomy.get_anatomy_name(compare_name, rep_preset, auth=self.auth)
-
     def update_project(self, *args, **kwargs):
         return api.addons.update_project(auth=self.auth, *args, **kwargs)
 
-    # studio from repo
+    #  REPOSITORY ################################################################
+    # anatomy
+
+    def get_rep_anatomy(self, project: str = None):
+        """
+        Актуальный пресет анатомии из репозитория
+        """
+        cls = None
+        try:
+            from .tools import import_subclasses_from_string_module
+
+            custom_class = repo.get_file_content(
+                "shortcut_solvers/anatomy.py", branch=self.name
+            )
+
+            for _cls in import_subclasses_from_string_module(
+                custom_class, f"{self.name.title()}AnatomyPreset", Solver
+            ):
+                if _cls.name == "anatomy":
+                    cls = _cls
+                    break
+        except FileNotFoundError:
+            from .shortcut_solvers.anatomy import AnatomySolver as cls
+        if not cls:
+            raise ValueError("Anatomy preset class not found")
+        return cls().solve(project)
+
     def get_rep_bundle(self):
         """
         Актуальный состав бандла из репозитория
@@ -140,21 +261,6 @@ class StudioSettings:
             else:
                 tools.update_dict_with_changes(addons, project_addons)
         return addons
-
-    def get_rep_anatomy(self, project: str = None):
-        """
-        Актуальный пресет анатомии из репозитория
-        """
-        anatomy = repo.get_file_content(self.anatomy_config_file, self.name)
-        if project:
-            from . import tools
-
-            project_anatomy = repo.get_file_content(
-                self.project_anatomy_file.format(project=project), self.name
-            )
-            if not tools.compare_dicts(anatomy, project_anatomy):
-                tools.update_dict_with_changes(anatomy, project_anatomy)
-        return anatomy
 
     def get_rep_attributes(self):
         """
