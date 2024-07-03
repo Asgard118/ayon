@@ -8,6 +8,7 @@ from ayon_tools import tools
 def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
     if isinstance(studio, str):
         studio = StudioSettings(studio)
+
     # COLLECT DATA
     # collect anatomy
     repo_anatomy = studio.get_rep_anatomy()
@@ -17,15 +18,19 @@ def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
         server_anatomy = studio.get_anatomy()
         if not server_anatomy:
             raise ServerDataError("Server anatomy data query failed")
-        preset_name = studio.get_default_anatomy_preset_name()
-        # TODO: create preset "default" if not exists
+        preset_name = studio.get_default_anatomy_preset_name(studio.default_settings, repo_anatomy)
+        studio.set_primary(preset_name)
         logging.info("Default preset name: %s", preset_name)
-        if not tools.compare_dicts(repo_anatomy, server_anatomy):
+        return
+        if not tools.compare_dicts(server_anatomy, repo_anatomy):
             logging.info("Anatomy is missmatch")
             studio.set_anatomy_preset(preset_name, repo_anatomy)
         else:
             logging.info("Anatomy is OK")
-    return
+
+
+
+
     # collect attributes
     repo_attributes = studio.get_rep_attributes()
     if not repo_attributes:
