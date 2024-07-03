@@ -1,17 +1,19 @@
+import logging
+import os
+
 import click
 
 
 @click.group()
-def cli():
-    pass
-
-
-@cli.command()
-@click.argument("studio", type=str, required=False)
-def info(studio_name: str or None):
-    from .commands import info
-
-    info.process(studio_name)
+@click.option("--debug", is_flag=True, default=False, help="Enable debug mode")
+@click.option("--stage", is_flag=True, default=False, help="Enable stage mode")
+@click.pass_context
+def cli(ctx, debug, stage):
+    ctx.ensure_object(dict)
+    if debug:
+        os.environ["DEBUG"] = "1"
+        logging.getLogger().setLevel(logging.DEBUG)
+        logging.debug("Debug mode ON")
 
 
 @cli.command()
@@ -25,15 +27,28 @@ def info(studio_name: str or None):
     default=(),
     help="Project Names",
 )
-def apply(studio, project):
+@click.pass_context
+def apply(ctx, studio, project):
     """
-    Example:
-         ayon_tools apply studio_name -p project_name1 -p project_name2
+    ayon_tools [options] apply <studio> [options]
+    ayon_tools --stage apply studio_name -p project1 --project project2
     """
     from .commands import apply
 
-    click.echo(f"Apply settings if studio {studio} for project {project}")
-    apply.run(studio)
+    click.echo(f"Apply settings if studio {studio} for projects: {','.join(project)}")
+    apply.run(studio, projects=project, **ctx.parent.params)
+
+
+@cli.command()
+@click.argument("studio", type=str, required=False)
+@click.pass_context
+def info(ctx, studio: str or None):
+    # from .commands import info
+
+    # debug = ctx.parent.params.get("debug")
+    # stage = ctx.parent.params.get("stage")
+    print(ctx.parent.params)
+    # info.run(studio_name, stage=stage)
 
 
 @cli.command()
