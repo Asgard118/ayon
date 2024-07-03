@@ -12,7 +12,6 @@ def get_studio_anatomy_presets_names(auth: Auth = default_auth) -> list:
         data = ayon_api.get_project_anatomy_presets()
     return data
 
-
 def get_studio_anatomy_preset(
     preset_name: str = None, auth: Auth = default_auth
 ) -> dict:
@@ -22,7 +21,6 @@ def get_studio_anatomy_preset(
     with auth:
         data = ayon_api.get_project_anatomy_preset(preset_name)
     return data
-
 
 def set_studio_anatomy_preset(
     preset_name: str,
@@ -39,7 +37,6 @@ def set_studio_anatomy_preset(
         json=preset
     )
     return response.raise_for_status()
-
 
 def create_studio_anatomy_preset(
     preset_name: str, preset: dict, auth: Auth = default_auth
@@ -69,7 +66,6 @@ def get_project_anatomy(project_name: str, auth: Auth = default_auth) -> dict:
     response.raise_for_status()
     return response.json()
 
-
 def set_project_anatomy(project_name: str, anatomy: dict, auth: Auth = default_auth):
     url_post = f"{auth.SERVER_URL}/api/projects/{project_name}/anatomy"
     response = requests.post(
@@ -79,7 +75,23 @@ def set_project_anatomy(project_name: str, anatomy: dict, auth: Auth = default_a
     )
     response.raise_for_status()
 
-def get_anatomy_name(auth: Auth = default_auth):
+def set_primary_preset(preset_name: str, auth: Auth = default_auth):
+    url_post = f"{auth.SERVER_URL}/api/anatomy/presets/{preset_name}/primary"
+    response = requests.post(
+        url=url_post,
+        headers=auth.HEADERS,
+    )
+    response.raise_for_status()
+
+
+def get_anatomy_name(compare_name: str, rep_preset: dict, auth: Auth = default_auth):
     with auth:
-        data = ayon_api.get_default_anatomy_preset_name()
-    return data
+        presets = get_studio_anatomy_presets_names()
+        primary_preset = next((preset for preset in presets if preset['primary']), None)
+        if primary_preset:
+            if primary_preset['name'] != compare_name:
+                create_studio_anatomy_preset(compare_name, rep_preset)
+                return compare_name
+        else:
+            create_studio_anatomy_preset(compare_name, rep_preset)
+            return compare_name

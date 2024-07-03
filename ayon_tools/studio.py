@@ -12,6 +12,7 @@ class StudioSettings:
     studio_config_file = "addons/{addon_name}/defaults.json"
     project_settings_file = "projects/{project}/project_settings.json"
     project_anatomy_file = "projects/{project}/project_anatomy.json"
+    default_settings = "default"
 
     def __init__(self, name: str):
         self.name = name
@@ -45,6 +46,12 @@ class StudioSettings:
 
     def get_anatomy(self, preset_name: str = None):
         return api.anatomy.get_studio_anatomy_preset(preset_name, auth=self.auth)
+
+    def set_primary(self, preset_name: str):
+        return api.anatomy.set_primary_preset(preset_name, auth=self.auth)
+
+    def create_anatomy(self, preset_name: str, preset: dict):
+        return api.anatomy.create_studio_anatomy_preset(preset_name, preset, auth=self.auth)
 
     def get_attributes(self):
         return api.attributes.get_attributes(auth=self.auth)
@@ -97,8 +104,11 @@ class StudioSettings:
             preset_name, preset, auth=self.auth
         )
 
-    def get_default_anatomy_preset_name(self):
-        return api.anatomy.get_anatomy_name(auth=self.auth)
+    def get_anatomy_presets(self):
+        return api.anatomy.get_studio_anatomy_presets_names(auth=self.auth)
+
+    def get_default_anatomy_preset_name(self, compare_name: str, rep_preset: dict):
+        return api.anatomy.get_anatomy_name(compare_name, rep_preset, auth=self.auth)
 
     def update_project(self, *args, **kwargs):
         return api.addons.update_project(auth=self.auth, *args, **kwargs)
