@@ -11,26 +11,21 @@ def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
 
     # COLLECT DATA
     # collect anatomy
-    repo_anatomy = studio.get_rep_anatomy()
-    if not repo_anatomy:
+    repo_studio_anatomy = studio.get_rep_anatomy()
+    if not repo_studio_anatomy:
         logging.warning("Repository anatomy data is not exists")
     else:
-        server_anatomy = studio.get_anatomy()
-        if not server_anatomy:
+        server_studio_anatomy = studio.get_default_anatomy_preset()
+        if not server_studio_anatomy:
             raise ServerDataError("Server anatomy data query failed")
-        preset_name = studio.get_default_anatomy_preset_name(studio.default_settings, repo_anatomy)
-        studio.set_primary(preset_name)
-        logging.info("Default preset name: %s", preset_name)
-        return
-        if not tools.compare_dicts(server_anatomy, repo_anatomy):
+        if not tools.compare_dicts(repo_studio_anatomy, server_studio_anatomy):
             logging.info("Anatomy is missmatch")
-            studio.set_anatomy_preset(preset_name, repo_anatomy)
+            preset_name = studio.get_default_anatomy_preset_name()
+            logging.info(f"Apply actual anatomy to {studio}")
+            studio.update_anatomy_preset(preset_name, repo_studio_anatomy)
         else:
             logging.info("Anatomy is OK")
-
-
-
-
+    return
     # collect attributes
     repo_attributes = studio.get_rep_attributes()
     if not repo_attributes:
@@ -40,7 +35,7 @@ def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
         if not server_attributes:
             raise ServerDataError("Wrong server attributes data")
         if not tools.compare_dicts(repo_attributes, server_attributes):
-            if not tools.compare_dicts_diff(repo_attributes, server_attributes):
+            if not tools.compare_dicts(repo_attributes, server_attributes):
                 logging.info("Attributes is missmatch")
                 studio.set_attributes(repo_attributes)
                 # for attribute in repo_attributes["attributes"]:
