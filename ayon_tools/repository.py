@@ -54,7 +54,7 @@ class Repository:
         else:
             logging.info(f"Already on branch {branch_name}")
 
-    def get_file_content(self, file_name: str, branch: str = None):
+    def get_file_content(self, file_name: str, branch: str = None, default=None):
         """
         Get file content from the latest commit of the specified branch
         """
@@ -71,6 +71,8 @@ class Repository:
         try:
             entry = tree[file_name]
         except KeyError:
+            if default is not None:
+                return default
             raise FileNotFoundError(
                 f"File {file_name} not found in branch {branch}, {self.workdir}"
             )
