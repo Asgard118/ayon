@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 from . import api
 from . import config
@@ -270,8 +271,10 @@ class StudioSettings:
         # iterate addons
         return attributes
 
+    def get_rep_addon_attributes(self) -> list: ...
+
     # project from repo
-    def get_rep_project_anatomy(self, project_name: str):
+    def get_rep_project_anatomy(self, project_name: str) -> list:
         """
         Актуальная анатомия проекта
         """
@@ -285,3 +288,31 @@ class StudioSettings:
         # TODO
 
     # utils
+
+    def get_addon_class(self, addon_name: str):
+        from ayon_tools.tools import (
+            import_subclasses_from_string_module,
+            import_subclasses_from_path_module,
+        )
+        from ayon_tools.base_addon import Addon
+        import ayon_tools
+
+        # from studio override
+        data = repo.get_file_content(
+            f"addons/{addon_name}/addon.py", branch=self.name, default=None
+        )
+        if data:
+            for _cls in import_subclasses_from_string_module(
+                data, f"{addon_name}_addon_module", Addon
+            ):
+                return _cls
+        # from default addon list
+        module_path = (
+            Path(ayon_tools.__file__).parent / "addons" / addon_name / "addon.py"
+        )
+        if module_path.exists():
+            _cls = next(import_subclasses_from_path_module(module_path, Addon), None)
+            if _cls:
+                return _cls
+        # base class
+        return Addon
