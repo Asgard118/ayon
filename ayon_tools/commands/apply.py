@@ -43,8 +43,6 @@ def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
         if not tools.compare_dicts(repo_attributes, server_attributes):
             all_attributes = tools.merge_dicts(repo_attributes, server_attributes)
             logging.info("Attributes is missmatch")
-            # all_attributes["deleteMissing"] = False
-            print (all_attributes)
             studio.set_all_attributes(all_attributes)
         else:
             logging.info("Attributes is OK")
