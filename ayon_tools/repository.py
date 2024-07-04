@@ -6,7 +6,7 @@ import pygit2
 
 from . import config
 
-NONETYPE = type("NoneType", (object,))
+NONETYPE = type("NoneType")
 
 
 class Repository:

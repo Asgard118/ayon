@@ -11,21 +11,27 @@ def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
 
     # COLLECT DATA
     # collect anatomy
-    repo_studio_anatomy = studio.get_rep_anatomy()
-    if not repo_studio_anatomy:
-        logging.warning("Repository anatomy data is not exists")
-    else:
-        server_studio_anatomy = studio.get_default_anatomy_preset()
-        if not server_studio_anatomy:
-            raise ServerDataError("Server anatomy data query failed")
-        if not tools.compare_dicts(repo_studio_anatomy, server_studio_anatomy):
-            logging.info("Anatomy is missmatch")
-            preset_name = studio.get_default_anatomy_preset_name()
-            logging.info(f"Apply actual anatomy to {studio}")
-            studio.update_anatomy_preset(preset_name, repo_studio_anatomy)
-        else:
-            logging.info("Anatomy is OK")
-    return
+
+
+    # repo_studio_anatomy = studio.get_rep_anatomy()
+    # if not repo_studio_anatomy:
+    #     logging.warning("Repository anatomy data is not exists")
+    # else:
+    #     server_studio_anatomy = studio.get_default_anatomy_preset()
+    #     if not server_studio_anatomy:
+    #         raise ServerDataError("Server anatomy data query failed")
+    #     if not tools.compare_dicts(repo_studio_anatomy, server_studio_anatomy):
+    #         logging.info("Anatomy is missmatch")
+    #         preset_name = studio.get_default_anatomy_preset_name()
+    #         logging.info(f"Apply actual anatomy to {studio}")
+    #         studio.update_anatomy_preset(preset_name, repo_studio_anatomy)
+    #     else:
+    #         logging.info("Anatomy is OK")
+
+
+
+
+
     # collect attributes
     repo_attributes = studio.get_rep_attributes()
     if not repo_attributes:
@@ -35,21 +41,15 @@ def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
         if not server_attributes:
             raise ServerDataError("Wrong server attributes data")
         if not tools.compare_dicts(repo_attributes, server_attributes):
-            if not tools.compare_dicts(repo_attributes, server_attributes):
-                logging.info("Attributes is missmatch")
-                studio.set_attributes(repo_attributes)
-                # for attribute in repo_attributes["attributes"]:
-                #     name_attributes = attribute["name"]
-                #     data_conf = {
-                #         "position": attribute["position"],
-                #         "scope": attribute["scope"],
-                #         "builtin": attribute["builtin"],
-                #         "data": attribute["data"],
-                #     }
-                #     studio.set_attributes(name_attributes, data_conf)
-            else:
-                logging.info("Attributes is OK")
+            all_attributes = tools.merge_dicts(repo_attributes, server_attributes)
+            logging.info("Attributes is missmatch")
+            # all_attributes["deleteMissing"] = False
+            print (all_attributes)
+            studio.set_all_attributes(all_attributes)
+        else:
+            logging.info("Attributes is OK")
 
+    return
     # collect bundle
     is_staging = bool(kwargs.get("stage"))
     bundle_name = "staging" if is_staging else "production"
@@ -89,7 +89,7 @@ def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
                 continue
             studio.set_addon_settings(addon_name, version, repo_addon_settings)
 
-    return
+
     projects = projects or studio.get_projects()
 
     # apply projects settings

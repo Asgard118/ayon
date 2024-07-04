@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 
+
 from . import api
 from . import config
 from .base_shortcut_solver import Solver
@@ -10,7 +11,7 @@ from .repository import repo
 class StudioSettings:
     bundle_config_file = "defaults/bundle.json"
     anatomy_config_file = "defaults/anatomy.json"
-    attributes_config_file = "defaults/attributes.json"
+    attributes_config_file = "attributes.yml"
     studio_config_file = "addons/{addon_name}/defaults.json"
     project_settings_file = "projects/{project}/project_settings.json"
     project_anatomy_file = "projects/{project}/project_anatomy.json"
@@ -167,6 +168,9 @@ class StudioSettings:
         for attr, data in attributes.items():
             api.attributes.set_attributes(attr, data, auth=self.auth)
 
+    def set_all_attributes(self, data: dict):
+        api.attributes.set_all_attributes(data, auth=self.auth)
+
     def get_bundle(self, bundle_name: str):
         return api.bundles.get_bundle(bundle_name, auth=self.auth)
 
@@ -267,9 +271,13 @@ class StudioSettings:
         """
         Актуальные студийные атрибуты из репозитория
         """
+        attributes_with_bundle = repo.get_file_content(self.bundle_config_file, self.name)
+        addons_name = attributes_with_bundle.get("addons")
         attributes = repo.get_file_content(self.attributes_config_file, self.name)
+        api.attributes.validate_attributes_yaml(attributes)
+        dict_attributes = {'attributes': attributes}
         # iterate addons
-        return attributes
+        return dict_attributes
 
     def get_rep_addon_attributes(self) -> list: ...
 

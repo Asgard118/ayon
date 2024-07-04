@@ -2,16 +2,20 @@ from typing import Any
 import requests
 import ayon_api
 from .auth import default_auth, Auth
+import yaml
+import logging
 
 
-def get_attributes(auth: Auth = default_auth) -> dict:
+def get_attributes(auth: Auth = default_auth):
     """
     Функция возвращает список атрибутов
     """
-    with auth:
-        data = ayon_api.get_attributes_schema()
+    response = requests.get(
+        url=f"{auth.SERVER_URL}/api/attributes",
+        headers=auth.HEADERS,
+    )
+    data = response.json()
     return data
-
 
 def set_attributes(attribute: str, data: dict, auth: Auth = default_auth):
     """
@@ -24,6 +28,13 @@ def set_attributes(attribute: str, data: dict, auth: Auth = default_auth):
     )
     response.raise_for_status()
 
+def set_all_attributes(data: dict, auth: Auth = default_auth):
+    response = requests.put(
+        url=f"{auth.SERVER_URL}/api/attributes",
+        headers=auth.HEADERS,
+        json=data,
+    )
+    response.raise_for_status()
 
 def check_attribute_exists(name: str) -> bool:
     """
@@ -94,11 +105,11 @@ def _check_attr_date_type(data_type: str):
     Проверяет соответствие типа атрибута
     """
     valid_data_types = [
-        "String",
-        "Integer",
-        "Decimal number",
-        "list Of Strings",
-        "Boolean",
+        "string",
+        "integer",
+        "decimal number",
+        "list of strings",
+        "boolean",
     ]
     if data_type not in valid_data_types:
         raise ValueError(f"Invalid data type: {data_type}.")
@@ -110,13 +121,13 @@ def check_attr_scope(scope: list):
     Проверяет соответствие типа области атрибута
     """
     valid_scopes = [
-        "Project",
-        "Folder",
-        "Task",
-        "User",
-        "Product",
-        "Version",
-        "Representation",
+        "project",
+        "folder",
+        "task",
+        "user",
+        "product",
+        "version",
+        "representation",
     ]
     if not isinstance(scope, list):
         raise ValueError(f"Scope should be a list of valid values. Provided: {scope}")
@@ -124,3 +135,33 @@ def check_attr_scope(scope: list):
     if invalid_scopes:
         raise ValueError(f"Invalid scope(s)")
     return scope
+
+
+def validate_attributes_yaml(yaml_content):
+    try:
+        if isinstance(yaml_content, str):
+            attributes = yaml.safe_load(yaml_content)
+        elif isinstance(yaml_content, list):
+            attributes = yaml_content
+        else:
+            raise ValueError("yaml_content should be a string or a list of dictionaries")
+    except yaml.YAMLError as exc:
+        raise ValueError(f"Error loading YAML: {exc}")
+
+    for attribute in attributes:
+        name = attribute.get('name')
+        scope = attribute.get('scope')
+        data = attribute.get('data', {})
+        data_type = data.get('type')
+
+        if scope:
+            try:
+                check_attr_scope(scope)
+            except ValueError as e:
+                logging.error(f"Error: {e}, attributes {name}")
+
+        if data_type:
+            try:
+                _check_attr_date_type(data_type)
+            except ValueError as e:
+                logging.error(f"Error: {e}, attributes {name}")
