@@ -188,3 +188,19 @@ def import_subclasses_from_string_module(module_code, module_name, parent_class)
         obj = getattr(module, name)
         if inspect.isclass(obj) and issubclass(obj, parent_class):
             yield obj
+
+
+def import_module_from_path(path):
+    module_name = path.stem
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def import_subclasses_from_path_module(path, parent_class):
+    module = import_module_from_path(path)
+    for name in dir(module):
+        obj = getattr(module, name)
+        if inspect.isclass(obj) and issubclass(obj, parent_class):
+            yield obj
