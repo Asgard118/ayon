@@ -6,6 +6,8 @@ import pygit2
 
 from . import config
 
+NONETYPE = type("NoneType", (object,))
+
 
 class Repository:
     default_branch = "master"
@@ -54,7 +56,7 @@ class Repository:
         else:
             logging.info(f"Already on branch {branch_name}")
 
-    def get_file_content(self, file_name: str, branch: str = None, default=None):
+    def get_file_content(self, file_name: str, branch: str = None, default=NONETYPE):
         """
         Get file content from the latest commit of the specified branch
         """
@@ -71,7 +73,7 @@ class Repository:
         try:
             entry = tree[file_name]
         except KeyError:
-            if default is not None:
+            if default is not NONETYPE:
                 return default
             raise FileNotFoundError(
                 f"File {file_name} not found in branch {branch}, {self.workdir}"
