@@ -1,5 +1,6 @@
 import logging
 
+from ayon_tools.api.attributes import merge_attributes
 from ayon_tools.exceptipns import RepositoryDataError, ServerDataError
 from ayon_tools.studio import StudioSettings
 from ayon_tools import tools
@@ -11,7 +12,6 @@ def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
 
     # COLLECT DATA
     # collect anatomy
-
 
     # repo_studio_anatomy = studio.get_rep_anatomy()
     # if not repo_studio_anatomy:
@@ -28,10 +28,6 @@ def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
     #     else:
     #         logging.info("Anatomy is OK")
 
-
-
-
-
     # collect attributes
     repo_attributes = studio.get_rep_attributes()
     if not repo_attributes:
@@ -40,12 +36,24 @@ def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
         server_attributes = studio.get_attributes()
         if not server_attributes:
             raise ServerDataError("Wrong server attributes data")
-        if not tools.compare_dicts(repo_attributes, server_attributes):
-            all_attributes = tools.merge_dicts(repo_attributes, server_attributes)
+        import json
+
+        from pathlib import Path
+
+        with open(Path("attrs-repo.json").resolve(), "w") as f:
+            json.dump(repo_attributes, f, indent=4)
+        with open(Path("attrs-studio.json").resolve(), "w") as f:
+            json.dump(server_attributes, f, indent=4)
+
+        if not tools.compare_dicts(
+            repo_attributes, server_attributes, ignore_keys=["position"]
+        ):
+            merged_attribs = merge_attributes(server_attributes, repo_attributes)
             logging.info("Attributes is missmatch")
-            studio.set_all_attributes(all_attributes)
+            studio.set_all_attributes(merged_attribs)
+            logging.info("Attributes was applied")
         else:
-            logging.info("Attributes is OK")
+            logging.info("Attributes is match")
 
     return
     # collect bundle
@@ -86,7 +94,6 @@ def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
             if tools.compare_dicts(repo_addon_settings, studio_addon_settings):
                 continue
             studio.set_addon_settings(addon_name, version, repo_addon_settings)
-
 
     projects = projects or studio.get_projects()
 

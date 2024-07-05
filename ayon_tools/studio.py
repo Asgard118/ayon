@@ -271,12 +271,18 @@ class StudioSettings:
         """
         Актуальные студийные атрибуты из репозитория
         """
-        attributes_with_bundle = repo.get_file_content(self.bundle_config_file, self.name)
-        addons_name = attributes_with_bundle.get("addons")
-        attributes = repo.get_file_content(self.attributes_config_file, self.name)
-        api.attributes.validate_attributes_yaml(attributes)
-        dict_attributes = {'attributes': attributes}
+
+        attributes = repo.get_file_content(
+            self.attributes_config_file, self.name, default=[]
+        )
+        for attr in attributes:
+            api.attributes.update_default_data(attr)
+        api.attributes.validate_attributes(attributes)
+        dict_attributes = {"attributes": attributes}
         # iterate addons
+        # attributes_with_bundle = repo.get_file_content(self.bundle_config_file, self.name)
+        # addon_name_list = attributes_with_bundle.get("addons")
+
         return dict_attributes
 
     def get_rep_addon_attributes(self) -> list: ...
