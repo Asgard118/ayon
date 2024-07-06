@@ -30,6 +30,12 @@ def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
 
     # collect attributes
     repo_attributes = studio.get_rep_attributes()
+    addons = ['maya']
+    for addon_name in addons:
+        addon_class = studio.get_addon_class(addon_name)
+        addon = addon_class(addon_name)
+        data = addon.get_custom_attributes(addon_name, studio.name)
+        repo_attributes['attributes'].extend(data)
     if not repo_attributes:
         logging.warning("Repository attributes data is not exists")
     else:
@@ -44,13 +50,12 @@ def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
             json.dump(repo_attributes, f, indent=4)
         with open(Path("attrs-studio.json").resolve(), "w") as f:
             json.dump(server_attributes, f, indent=4)
-
         if not tools.compare_dicts(
             repo_attributes, server_attributes, ignore_keys=["position"]
         ):
-            merged_attribs = merge_attributes(server_attributes, repo_attributes)
+            merged_attributes = merge_attributes(server_attributes, repo_attributes)
             logging.info("Attributes is missmatch")
-            studio.set_all_attributes(merged_attribs)
+            studio.set_all_attributes(merged_attributes)
             logging.info("Attributes was applied")
         else:
             logging.info("Attributes is match")

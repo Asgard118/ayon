@@ -8,6 +8,8 @@ class Addon:
     def __init__(self, name):
         self.name = name
 
+    addon_custom_attributes = "addons/{addon_name}/attributes.yml"
+
     @classmethod
     def get(cls, name: str, studio_name: str): ...
 
@@ -29,5 +31,5 @@ class Addon:
         # TODO: apply project shortcuts
         return settings
 
-    def get_custom_attributes(self):
-        pass
+    def get_custom_attributes(self, addon_name,  branch):
+        return repo.get_file_content(self.addon_custom_attributes.format(addon_name=addon_name),  branch)

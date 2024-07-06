@@ -5,45 +5,40 @@ from collections.abc import Mapping
 import json
 import importlib.util
 import sys
+import os
 
 
 # check dicts is match
 def compare_dicts(dict1, dict2, ignore_keys=None):
     if ignore_keys is None:
-        ignore_keys = []
-
-    for key, value in dict1.items():
-        if key in ignore_keys:
-            continue
-        if key not in dict2:
-            continue
-        if isinstance(value, dict):
-            if not isinstance(dict2[key], dict):
+        ignore_keys = set()
+    else:
+        ignore_keys = set(ignore_keys)
+    # Проверяем, что оба словаря имеют ключ 'attributes'
+    if 'attributes' not in dict1 or 'attributes' not in dict2:
+        return False
+    # Создаем словари атрибутов, используя 'name' как ключ
+    attrs1 = {attr['name']: attr for attr in dict1['attributes']}
+    attrs2 = {attr['name']: attr for attr in dict2['attributes']}
+    # Проверяем, что все атрибуты из dict1 есть в dict2
+    for name, attr1 in attrs1.items():
+        if name not in attrs2:
+            return False
+        attr2 = attrs2[name]
+        # Сравниваем каждое поле атрибута
+        for key, value in attr1.items():
+            if key in ignore_keys:
+                continue
+            if key not in attr2:
                 return False
-            if not compare_dicts(value, dict2[key], ignore_keys):
-                return False
-        elif isinstance(value, list):
-            if not isinstance(dict2[key], list):
-                return False
-            value_filtered = [
-                item for item in value if not any(k in item for k in ignore_keys)
-            ]
-            dict2_filtered = [
-                item for item in dict2[key] if not any(k in item for k in ignore_keys)
-            ]
-            if len(value_filtered) != len(dict2_filtered):
-                return False
-            for item in value_filtered:
-                if isinstance(item, dict):
-                    if not any(
-                        compare_dicts(item, x, ignore_keys) for x in dict2_filtered
-                    ):
+            if key == 'data':
+                # Для поля 'data' проверяем каждый подключ
+                for data_key, data_value in value.items():
+                    if data_key not in attr2['data']:
                         return False
-                else:
-                    if item not in dict2_filtered:
+                    if data_value != attr2['data'][data_key]:
                         return False
-        else:
-            if dict2[key] != value:
+            elif value != attr2[key]:
                 return False
 
     return True
