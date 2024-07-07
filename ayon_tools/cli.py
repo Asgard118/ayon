@@ -1,6 +1,5 @@
 import logging
 import os
-
 import click
 
 
@@ -28,16 +27,23 @@ def cli(ctx, debug, stage, fake):
     default=(),
     help="Project Names",
 )
+@click.option(
+    "-o",
+    "--operations",
+    type=click.Choice(["anatomy", "attrs", "settings"]),
+    required=False,
+    multiple=True,
+    default=[],
+)
 @click.pass_context
-def apply(ctx, studio, project):
+def apply(ctx, studio, project, operations):
     """
     ayon_tools [options] apply <studio> [options]
     ayon_tools --stage apply studio_name -p project1 --project project2
     """
     from .commands import apply
 
-    click.echo(f"Apply settings if studio {studio} for projects: {','.join(project)}")
-    apply.run(studio, projects=project, **ctx.parent.params)
+    apply.run(studio, projects=project, operations=operations, **ctx.parent.params)
 
 
 @cli.command()

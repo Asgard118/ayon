@@ -6,47 +6,53 @@ from ayon_tools.studio import StudioSettings
 from ayon_tools import tools
 
 
-def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
+def run(
+    studio: StudioSettings,
+    projects: list[str] = None,
+    operations: list = None,
+    **kwargs,
+):
     if isinstance(studio, str):
         studio = StudioSettings(studio)
     fake_apply = kwargs.get("fake")
     # COLLECT DATA
     # collect anatomy
-
-    repo_studio_anatomy = studio.get_rep_anatomy()
-    if not repo_studio_anatomy:
-        logging.warning("Repository anatomy data is not exists")
-    else:
-        server_studio_anatomy = studio.get_default_anatomy_preset()
-        if not server_studio_anatomy:
-            raise ServerDataError("Server anatomy data query failed")
-        if not tools.compare_dicts(repo_studio_anatomy, server_studio_anatomy):
-            logging.info("Anatomy is missmatch")
-            preset_name = studio.get_default_anatomy_preset_name()
-            logging.info(f"Apply actual anatomy to {studio}")
-            if not fake_apply:
-                studio.update_anatomy_preset(preset_name, repo_studio_anatomy)
+    if operations and ("anatomy" in operations):
+        repo_studio_anatomy = studio.get_rep_anatomy()
+        if not repo_studio_anatomy:
+            logging.warning("Repository anatomy data is not exists")
         else:
-            logging.info("Anatomy is OK")
+            server_studio_anatomy = studio.get_default_anatomy_preset()
+            if not server_studio_anatomy:
+                raise ServerDataError("Server anatomy data query failed")
+            if not tools.compare_dicts(repo_studio_anatomy, server_studio_anatomy):
+                logging.info("Anatomy is missmatch")
+                preset_name = studio.get_default_anatomy_preset_name()
+                logging.info(f"Apply actual anatomy to {studio}")
+                if not fake_apply:
+                    studio.update_anatomy_preset(preset_name, repo_studio_anatomy)
+            else:
+                logging.info("Anatomy is OK")
 
     # collect attributes
-    repo_attributes = studio.get_rep_attributes()
-    if not repo_attributes:
-        logging.warning("Repository attributes data is not exists")
-    else:
-        server_attributes = studio.get_attributes()
-        if not server_attributes:
-            raise ServerDataError("Wrong server attributes data")
-        if not tools.compare_dicts(
-            repo_attributes, server_attributes, ignore_keys=["position"]
-        ):
-            merged_attributes = merge_attributes(server_attributes, repo_attributes)
-            logging.info("Attributes is missmatch")
-            if not fake_apply:
-                studio.set_all_attributes(merged_attributes)
-            logging.info("Attributes was applied")
+    if operations and ("attrs" in operations):
+        repo_attributes = studio.get_rep_attributes()
+        if not repo_attributes:
+            logging.warning("Repository attributes data is not exists")
         else:
-            logging.info("Attributes is match")
+            server_attributes = studio.get_attributes()
+            if not server_attributes:
+                raise ServerDataError("Wrong server attributes data")
+            if not tools.compare_dicts(
+                repo_attributes, server_attributes, ignore_keys=["position"]
+            ):
+                merged_attributes = merge_attributes(server_attributes, repo_attributes)
+                logging.info("Attributes is missmatch")
+                if not fake_apply:
+                    studio.set_all_attributes(merged_attributes)
+                logging.info("Attributes was applied")
+            else:
+                logging.info("Attributes is match")
     return
     # collect bundle
     is_staging = bool(kwargs.get("stage"))
