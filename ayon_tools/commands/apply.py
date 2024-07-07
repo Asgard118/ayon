@@ -9,57 +9,44 @@ from ayon_tools import tools
 def run(studio: StudioSettings, projects: list[str] = None, **kwargs):
     if isinstance(studio, str):
         studio = StudioSettings(studio)
-
+    fake_apply = kwargs.get("fake")
     # COLLECT DATA
     # collect anatomy
 
-    # repo_studio_anatomy = studio.get_rep_anatomy()
-    # if not repo_studio_anatomy:
-    #     logging.warning("Repository anatomy data is not exists")
-    # else:
-    #     server_studio_anatomy = studio.get_default_anatomy_preset()
-    #     if not server_studio_anatomy:
-    #         raise ServerDataError("Server anatomy data query failed")
-    #     if not tools.compare_dicts(repo_studio_anatomy, server_studio_anatomy):
-    #         logging.info("Anatomy is missmatch")
-    #         preset_name = studio.get_default_anatomy_preset_name()
-    #         logging.info(f"Apply actual anatomy to {studio}")
-    #         studio.update_anatomy_preset(preset_name, repo_studio_anatomy)
-    #     else:
-    #         logging.info("Anatomy is OK")
+    repo_studio_anatomy = studio.get_rep_anatomy()
+    if not repo_studio_anatomy:
+        logging.warning("Repository anatomy data is not exists")
+    else:
+        server_studio_anatomy = studio.get_default_anatomy_preset()
+        if not server_studio_anatomy:
+            raise ServerDataError("Server anatomy data query failed")
+        if not tools.compare_dicts(repo_studio_anatomy, server_studio_anatomy):
+            logging.info("Anatomy is missmatch")
+            preset_name = studio.get_default_anatomy_preset_name()
+            logging.info(f"Apply actual anatomy to {studio}")
+            if not fake_apply:
+                studio.update_anatomy_preset(preset_name, repo_studio_anatomy)
+        else:
+            logging.info("Anatomy is OK")
 
     # collect attributes
     repo_attributes = studio.get_rep_attributes()
-    addons = ['maya']
-    for addon_name in addons:
-        addon_class = studio.get_addon_class(addon_name)
-        addon = addon_class(addon_name)
-        data = addon.get_custom_attributes(addon_name, studio.name)
-        repo_attributes['attributes'].extend(data)
     if not repo_attributes:
         logging.warning("Repository attributes data is not exists")
     else:
         server_attributes = studio.get_attributes()
         if not server_attributes:
             raise ServerDataError("Wrong server attributes data")
-        import json
-
-        from pathlib import Path
-
-        with open(Path("attrs-repo.json").resolve(), "w") as f:
-            json.dump(repo_attributes, f, indent=4)
-        with open(Path("attrs-studio.json").resolve(), "w") as f:
-            json.dump(server_attributes, f, indent=4)
         if not tools.compare_dicts(
             repo_attributes, server_attributes, ignore_keys=["position"]
         ):
             merged_attributes = merge_attributes(server_attributes, repo_attributes)
             logging.info("Attributes is missmatch")
-            studio.set_all_attributes(merged_attributes)
+            if not fake_apply:
+                studio.set_all_attributes(merged_attributes)
             logging.info("Attributes was applied")
         else:
             logging.info("Attributes is match")
-
     return
     # collect bundle
     is_staging = bool(kwargs.get("stage"))
