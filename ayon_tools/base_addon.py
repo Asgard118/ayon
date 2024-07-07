@@ -92,7 +92,7 @@ class Addon:
         if module_path.exists():
             _cls = next(import_subclasses_from_path_module(module_path, Addon), None)
             if _cls:
-                logging.info(f"Return addon class from default addons: {addon_name}")
+                logging.debug(f"Return addon class from default addons: {addon_name}")
                 return _cls
         # base class
         logging.debug(f"Return base addon class: {addon_name}")
