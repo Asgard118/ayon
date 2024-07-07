@@ -95,7 +95,7 @@ class Addon:
                 logging.info(f"Return addon class from default addons: {addon_name}")
                 return _cls
         # base class
-        logging.info(f"Return base addon class: {addon_name}")
+        logging.debug(f"Return base addon class: {addon_name}")
         return Addon
 
     @classmethod
