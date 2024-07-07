@@ -307,31 +307,7 @@ class StudioSettings:
         # TODO
 
     # utils
+    def get_addon(self, addon_name: str):
+        from . import base_addon
 
-    def get_addon_class(self, addon_name: str):
-        from ayon_tools.tools import (
-            import_subclasses_from_string_module,
-            import_subclasses_from_path_module,
-        )
-        from ayon_tools.base_addon import Addon
-        import ayon_tools
-
-        # from studio override
-        data = repo.get_file_content(
-            f"addons/{addon_name}/addon.py", branch=self.name, default=None
-        )
-        if data:
-            for _cls in import_subclasses_from_string_module(
-                data, f"{addon_name}_addon_module", Addon
-            ):
-                return _cls
-        # from default addon list
-        module_path = (
-            Path(ayon_tools.__file__).parent / "addons" / addon_name / "addon.py"
-        )
-        if module_path.exists():
-            _cls = next(import_subclasses_from_path_module(module_path, Addon), None)
-            if _cls:
-                return _cls
-        # base class
-        return Addon
+        return base_addon.Addon.get_addon_instance(addon_name, self)
