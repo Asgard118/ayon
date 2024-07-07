@@ -54,7 +54,7 @@ def run(
                     studio.set_all_attributes(merged_attributes)
                 logging.info("Attributes was applied")
             else:
-                logging.info("Attributes is match")
+                logging.info("Attributes is OK")
     else:
         logging.info("Skip attributes")
     return
