@@ -16,9 +16,8 @@ def run(
         studio = StudioSettings(studio)
     fake_apply = kwargs.get("fake")
     # COLLECT DATA
-    # collect anatomy
-    print(operations)
     if not operations or ("anatomy" in operations):
+        # apply anatomy
         repo_studio_anatomy = studio.get_rep_anatomy()
         if not repo_studio_anatomy:
             logging.warning("Repository anatomy data is not exists")
@@ -36,8 +35,8 @@ def run(
                 logging.info("Anatomy is OK")
     else:
         logging.info("Skip anatomy")
-    # collect attributes
     if not operations or ("attrs" in operations):
+        # apply attributes
         repo_attributes = studio.get_rep_attributes()
         if not repo_attributes:
             logging.warning("Repository attributes data is not exists")
@@ -46,7 +45,7 @@ def run(
             if not server_attributes:
                 raise ServerDataError("Wrong server attributes data")
             if not tools.compare_dicts(
-                repo_attributes, server_attributes, ignore_keys=["position"]
+                    repo_attributes, server_attributes, ignore_keys=["position"]
             ):
                 merged_attributes = merge_attributes(server_attributes, repo_attributes)
                 logging.info("Attributes is missmatch")
