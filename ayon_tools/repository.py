@@ -61,9 +61,7 @@ class Repository:
         Get file content from the latest commit of the specified branch
         """
         branch = branch or self.default_branch
-        logging.info(
-            f"Getting file content {file_name} from the latest commit of {branch}"
-        )
+        logging.debug(f"Getting file content {file_name} from {branch}")
         branch_ref = f"refs/remotes/origin/{branch}"
         if branch_ref not in self.repo.references:
             raise ValueError(f"Branch {branch} not found")
