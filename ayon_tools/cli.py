@@ -7,8 +7,9 @@ import click
 @click.group()
 @click.option("--debug", is_flag=True, default=False, help="Enable debug mode")
 @click.option("--stage", is_flag=True, default=False, help="Enable stage mode")
+@click.option("--fake", is_flag=True, default=False, help="Fake apply changes")
 @click.pass_context
-def cli(ctx, debug, stage):
+def cli(ctx, debug, stage, fake):
     ctx.ensure_object(dict)
     if debug:
         os.environ["DEBUG"] = "1"
