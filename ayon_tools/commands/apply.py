@@ -17,7 +17,8 @@ def run(
     fake_apply = kwargs.get("fake")
     # COLLECT DATA
     # collect anatomy
-    if operations and ("anatomy" in operations):
+    print(operations)
+    if not operations or ("anatomy" in operations):
         repo_studio_anatomy = studio.get_rep_anatomy()
         if not repo_studio_anatomy:
             logging.warning("Repository anatomy data is not exists")
@@ -33,9 +34,10 @@ def run(
                     studio.update_anatomy_preset(preset_name, repo_studio_anatomy)
             else:
                 logging.info("Anatomy is OK")
-
+    else:
+        logging.info("Skip anatomy")
     # collect attributes
-    if operations and ("attrs" in operations):
+    if not operations or ("attrs" in operations):
         repo_attributes = studio.get_rep_attributes()
         if not repo_attributes:
             logging.warning("Repository attributes data is not exists")
@@ -53,6 +55,8 @@ def run(
                 logging.info("Attributes was applied")
             else:
                 logging.info("Attributes is match")
+    else:
+        logging.info("Skip attributes")
     return
     # collect bundle
     is_staging = bool(kwargs.get("stage"))
