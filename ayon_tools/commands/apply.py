@@ -35,6 +35,8 @@ def run(
                 logging.info("Anatomy is OK")
     else:
         logging.info("Skip anatomy")
+
+
     if not operations or ("attrs" in operations):
         # apply attributes
         repo_attributes = studio.get_rep_attributes()
@@ -56,46 +58,49 @@ def run(
                 logging.info("Attributes is OK")
     else:
         logging.info("Skip attributes")
-    return
+
     # collect bundle
-    is_staging = bool(kwargs.get("stage"))
-    bundle_name = "staging" if is_staging else "production"
-    repo_bundle = studio.get_rep_bundle()
-    if not repo_bundle:
-        logging.warning("Repository bundle data is not exists")
-    else:
-        if is_staging:
-            server_bundle = studio.get_staging_bundle()
+    if not operations or ("bundle" in operations):
+        is_staging = bool(kwargs.get("stage"))
+        bundle_name = "staging" if is_staging else "production"
+        repo_bundle = studio.get_rep_bundle()
+        if not repo_bundle:
+            logging.warning("Repository bundle data is not exists")
         else:
-            server_bundle = studio.get_productions_bundle()
-        repo_bundle["isProduction"] = not is_staging
-        repo_bundle["isStaging"] = is_staging
-        if not server_bundle:
-            logging.info("Create bundle: %s", bundle_name)
-            studio.create_bundle(bundle_name, repo_bundle)
-        else:
-            logging.info("Update bundle %s", bundle_name)
-            studio.update_bundle(bundle_name, repo_bundle)
+            if is_staging:
+                server_bundle = studio.get_staging_bundle()
+            else:
+                server_bundle = studio.get_productions_bundle()
+            repo_bundle["isProduction"] = not is_staging
+            repo_bundle["isStaging"] = is_staging
+            if not server_bundle:
+                logging.info("Create bundle: %s", bundle_name)
+                studio.create_bundle(bundle_name, repo_bundle)
+            else:
+                logging.info("Update bundle %s", bundle_name)
+                studio.update_bundle(bundle_name, repo_bundle)
 
-    # collect addons
-    if repo_bundle:
-        # здесь мы уже уверены что состав бандла и версии аддонов соответствует
-        server_addons = studio.get_addons()
-        if not server_addons:
-            raise ServerDataError("Wrong server addon data")
-        for addon_name, version in repo_bundle["addons"].items():
-            if addon_name not in server_addons:
-                raise RepositoryDataError(
-                    f"Addon {addon_name} not found in server data"
-                )
-            repo_addon_settings = studio.get_rep_addon_settings(addon_name)
-            if not repo_addon_settings:
-                continue
-            studio_addon_settings = studio.get_addon_settings(addon_name, version)
-            if tools.compare_dicts(repo_addon_settings, studio_addon_settings):
-                continue
-            studio.set_addon_settings(addon_name, version, repo_addon_settings)
+        # collect addons
+        if repo_bundle:
+            # здесь мы уже уверены что состав бандла и версии аддонов соответствует
+            server_addons = studio.get_addons()
+            if not server_addons:
+                raise ServerDataError("Wrong server addon data")
+            for addon_name, version in repo_bundle["addons"].items():
+                if addon_name not in server_addons:
+                    raise RepositoryDataError(
+                        f"Addon {addon_name} not found in server data"
+                    )
+                repo_addon_settings = studio.get_rep_addon_settings(addon_name)
+                if not repo_addon_settings:
+                    continue
+                studio_addon_settings = studio.get_addon_settings(addon_name, version)
+                if tools.compare_dicts(repo_addon_settings, studio_addon_settings):
+                    continue
+                studio.set_addon_settings(addon_name, version, repo_addon_settings)
 
+
+    return
     projects = projects or studio.get_projects()
 
     # apply projects settings

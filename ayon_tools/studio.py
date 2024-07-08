@@ -228,16 +228,16 @@ class StudioSettings:
                 "shortcut_solvers/anatomy.py", branch=self.name
             )
 
-            for _cls in import_subclasses_from_string_module(
+            cls =next(import_subclasses_from_string_module(
                 custom_class, f"{self.name.title()}AnatomyPreset", Solver
-            ):
-                if _cls.name == "anatomy":
-                    cls = _cls
-                    break
+            ), None)
+
         except FileNotFoundError:
-            from .shortcut_solvers.anatomy import AnatomySolver as cls
-        if not cls:
-            raise ValueError("Anatomy preset class not found")
+            if cls:
+                return cls
+        from .shortcut_solvers.anatomy import AnatomySolver as cls
+        # if not cls:
+        #     raise ValueError("Anatomy preset class not found")
         return cls().solve(project)
 
     def get_rep_bundle(self):
@@ -263,8 +263,8 @@ class StudioSettings:
                 )
             except FileNotFoundError:
                 logging.debug("No project overrides")
-            else:
-                tools.update_dict_with_changes(addons, project_addons)
+            # else:
+            #     tools.update_dict_with_changes(addons, project_addons)
         return addons
 
     def get_rep_attributes(self):

@@ -10,7 +10,7 @@ NONETYPE = type("NoneType")
 
 
 class Repository:
-    default_branch = "master"
+    default_branch = "main"
 
     def __init__(self):
         self.url = config.REPOSITORY_URL

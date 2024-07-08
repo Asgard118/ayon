@@ -3,8 +3,7 @@ from pathlib import Path
 import json
 
 
-WORKDIR = Path(os.getenv("AYON_TOOLS_WORKDIR") or "~/.ayon_tools").expanduser().resolve()
-print(WORKDIR)
+WORKDIR = Path(os.getenv("AYON_TOOLS_WORKDIR") or "~/ayon_tools").expanduser().resolve()
 
 def load_config():
     config_file = WORKDIR / "config.json"
