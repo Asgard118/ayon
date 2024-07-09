@@ -259,7 +259,7 @@ class StudioSettings:
         Актуальные студийные настройки аддона из репозитория
         """
         addons = repo.get_file_content(
-            self.studio_config_file.format(addon_name=addon_name), self.name
+            self.studio_config_file.format(addon_name=addon_name), self.name, None
         )
         if project:
             from . import tools
