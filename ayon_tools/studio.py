@@ -1,7 +1,4 @@
 import logging
-from pathlib import Path
-
-import ayon_tools.api.addons
 from . import api
 from . import config
 from .base_shortcut_solver import Solver
@@ -34,7 +31,10 @@ class StudioSettings:
     # SERVER ##################################################################
 
     def get_projects(self):
-        return ayon_tools.api.addons.get_projects(auth=self.auth)
+        return api.projects.get_projects(auth=self.auth)
+
+    def get_project_names(self):
+        return api.projects.get_project_names(auth=self.auth)
 
     # studio addon settings
 
@@ -231,14 +231,18 @@ class StudioSettings:
                 "shortcut_solvers/anatomy.py", branch=self.name
             )
 
-            cls =next(import_subclasses_from_string_module(
-                custom_class, f"{self.name.title()}AnatomyPreset", Solver
-            ), None)
+            cls = next(
+                import_subclasses_from_string_module(
+                    custom_class, f"{self.name.title()}AnatomyPreset", Solver
+                ),
+                None,
+            )
 
         except FileNotFoundError:
             if cls:
                 return cls
         from .shortcut_solvers.anatomy import AnatomySolver as cls
+
         # if not cls:
         #     raise ValueError("Anatomy preset class not found")
         return cls().solve(project)
