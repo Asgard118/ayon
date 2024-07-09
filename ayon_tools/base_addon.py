@@ -22,13 +22,13 @@ class Addon:
         default_settings_path = Path("addons", self.name, "defaults.json").as_posix()
         return repo.get_file_content(default_settings_path, studio_name)
 
-    def get_repo_settings(self, studio_name):
+    def get_repo_settings(self):
         settings_path = Path("addons", self.name, "defaults.json").as_posix()
-        return repo.get_file_content(settings_path, studio_name)
+        return repo.get_file_content(settings_path, self.studio.name)
 
-    def get_settings(self, studio_name: str = None, project: str = None):
+    def get_settings(self, project: str = None):
         # get default
-        settings = self.get_default_settings(studio_name)
+        settings = self.get_default_settings(self.studio.name)
         # resolve shortcuts
         settings = self.solve_shortcuts(settings, project)
         return settings
