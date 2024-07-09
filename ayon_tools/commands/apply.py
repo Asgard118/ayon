@@ -71,18 +71,27 @@ def run(
                 server_bundle = studio.get_staging_bundle()
             else:
                 server_bundle = studio.get_productions_bundle()
-            repo_bundle["isProduction"] = not is_staging
-            repo_bundle["isStaging"] = is_staging
+            staging_server_bundle = studio.get_staging_bundle()
             if not server_bundle:
+                # create new bundle
                 logging.info("Create bundle: %s", bundle_name)
-                studio.create_bundle(bundle_name, repo_bundle)
-            else:
-                logging.info("Update bundle %s", bundle_name)
-                studio.update_bundle(bundle_name, repo_bundle)
-
+                studio.create_bundle(
+                    "production",
+                    **repo_bundle,
+                    is_production= not is_staging,
+                    is_staging=is_staging
+                )
+            # тут допишу сравнение если сервер бандл и стагинг уже есть
+            elif not staging_server_bundle:
+                logging.info("Create bundle: %s", bundle_name)
+                studio.create_bundle(
+                    "staging",
+                    **repo_bundle,
+                    is_production= is_staging,
+                    is_staging=not is_staging
+                )
         # collect addons
         if repo_bundle:
-            # здесь мы уже уверены что состав бандла и версии аддонов соответствует
             server_addons = studio.get_addons()
             if not server_addons:
                 raise ServerDataError("Wrong server addon data")
@@ -100,9 +109,9 @@ def run(
                 studio.set_addon_settings(addon_name, version, repo_addon_settings)
 
 
+
     return
     projects = projects or studio.get_projects()
-
     # apply projects settings
     if projects:
         for project in projects:

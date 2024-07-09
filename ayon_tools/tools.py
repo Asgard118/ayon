@@ -37,6 +37,8 @@ def compare_dicts(dict1, dict2, ignore_keys=None):
                 continue
             item_types = set([type(i) for i in value])
             if len(item_types) > 1:
+                print(dict1, value)
+                print(dict2, dict2[key])
                 logging.warning("Skip multi typed list!")
                 continue
             item_type = item_types.pop()

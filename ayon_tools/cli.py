@@ -30,7 +30,7 @@ def cli(ctx, debug, stage, fake):
 @click.option(
     "-o",
     "--operations",
-    type=click.Choice(["anatomy", "attrs", "settings"]),
+    type=click.Choice(["anatomy", "attrs", "settings", "bundle"]),
     required=False,
     multiple=True,
     default=[],

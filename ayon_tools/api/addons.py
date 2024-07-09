@@ -45,6 +45,11 @@ def get_project_settings(project_name: str, auth: Auth = default_auth) -> dict:
         data = ayon_api.get_addons_project_settings(project_name)
     return data
 
+def get_projects(auth: Auth = default_auth) -> dict:
+    with auth:
+        data = ayon_api.get_projects()
+    return data
+
 
 def set_project_settings(
     addon_name: str,

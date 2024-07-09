@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-
+import ayon_tools.api.addons
 from . import api
 from . import config
 from .base_shortcut_solver import Solver
@@ -9,7 +9,7 @@ from .repository import repo
 
 
 class StudioSettings:
-    bundle_config_file = "defaults/bundle.json"
+    bundle_config_file = "bundle.yml"
     anatomy_config_file = "defaults/anatomy.json"
     attributes_config_file = "attributes.yml"
     studio_config_file = "addons/{addon_name}/defaults.json"
@@ -33,9 +33,8 @@ class StudioSettings:
 
     # SERVER ##################################################################
 
-    def get_projects(self) -> list:
-        # TODO
-        return []
+    def get_projects(self):
+        return ayon_tools.api.addons.get_projects(auth=self.auth)
 
     # studio addon settings
 
@@ -186,14 +185,18 @@ class StudioSettings:
     def get_staging_bundle(self):
         return api.bundles.get_staging_bundle(auth=self.auth)
 
-    def create_bundle(self, name: str, data: dict):
-        installer_version: str = data["installer_version"]
-        addon_list = data["addons"]
+    def create_bundle(self, name: str, addons, installer_version, **options):
+        # installer_version: str = data["installerVersion"]
+        # addon_list = data["addons"]
         return api.bundles.create_bundle(
-            name, addon_list, installer_version, auth=self.auth
+            name, addons, installer_version, auth=self.auth, **options
         )
 
+    def create_new_bundle(self, data: dict, bundle_name: str):
+        return api.bundles.create_new_bundles(data, bundle_name, auth=self.auth)
+
     # project configs
+
     def get_project_anatomy(self, project_name: str):
         return api.anatomy.get_project_anatomy(project_name, auth=self.auth)
 
