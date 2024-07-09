@@ -36,7 +36,6 @@ def run(
     else:
         logging.info("Skip anatomy")
 
-
     if not operations or ("attrs" in operations):
         # apply attributes
         repo_attributes = studio.get_rep_attributes()
@@ -47,7 +46,7 @@ def run(
             if not server_attributes:
                 raise ServerDataError("Wrong server attributes data")
             if not tools.compare_dicts(
-                    repo_attributes, server_attributes, ignore_keys=["position"]
+                repo_attributes, server_attributes, ignore_keys=["position"]
             ):
                 merged_attributes = merge_attributes(server_attributes, repo_attributes)
                 logging.info("Attributes is missmatch")
@@ -71,24 +70,15 @@ def run(
                 server_bundle = studio.get_staging_bundle()
             else:
                 server_bundle = studio.get_productions_bundle()
-            staging_server_bundle = studio.get_staging_bundle()
+            # staging_server_bundle = studio.get_staging_bundle()
             if not server_bundle:
                 # create new bundle
                 logging.info("Create bundle: %s", bundle_name)
                 studio.create_bundle(
-                    "production",
+                    bundle_name,
                     **repo_bundle,
-                    is_production= not is_staging,
-                    is_staging=is_staging
-                )
-            # тут допишу сравнение если сервер бандл и стагинг уже есть
-            elif not staging_server_bundle:
-                logging.info("Create bundle: %s", bundle_name)
-                studio.create_bundle(
-                    "staging",
-                    **repo_bundle,
-                    is_production= is_staging,
-                    is_staging=not is_staging
+                    is_production=not is_staging,
+                    is_staging=is_staging,
                 )
         # collect addons
         if repo_bundle:
@@ -100,18 +90,25 @@ def run(
                     raise RepositoryDataError(
                         f"Addon {addon_name} not found in server data"
                     )
-                repo_addon_settings = studio.get_rep_addon_settings(addon_name)
+                addon = studio.get_addon(addon_name)
+                repo_addon_settings = addon.get_repo_settings()
                 if not repo_addon_settings:
+                    logging.debug(f"Empty settings for {addon_name}")
                     continue
                 studio_addon_settings = studio.get_addon_settings(addon_name, version)
+
                 if tools.compare_dicts(repo_addon_settings, studio_addon_settings):
+                    logging.info(f"Addon settings is OK: {addon_name}")
                     continue
-                studio.set_addon_settings(addon_name, version, repo_addon_settings)
-
-
-
+                else:
+                    print("APPLY FOR", addon_name)
+                    # TODO: merge settings
+                    # TODO: apply settings
+                    # studio.set_addon_settings(addon_name, version, repo_addon_settings)
+        else:
+            logging.warning("Repository bundle data is not exists")
     return
-    projects = projects or studio.get_projects()
+    projects = projects or studio.get_project_names()
     # apply projects settings
     if projects:
         for project in projects:
