@@ -80,6 +80,15 @@ def run(
                     is_production=not is_staging,
                     is_staging=is_staging,
                 )
+            else:
+                # create new bundle
+                logging.info("Create bundle: %s", 'staging')
+                studio.create_bundle(
+                    'staging',
+                    **repo_bundle,
+                    is_production=is_staging,
+                    is_staging=not is_staging,
+                )
         # collect addons
         if repo_bundle:
             server_addons = studio.get_addons()
@@ -96,15 +105,13 @@ def run(
                     logging.debug(f"Empty settings for {addon_name}")
                     continue
                 studio_addon_settings = studio.get_addon_settings(addon_name, version)
-
                 if tools.compare_dicts(repo_addon_settings, studio_addon_settings):
                     logging.info(f"Addon settings is OK: {addon_name}")
                     continue
                 else:
                     print("APPLY FOR", addon_name)
-                    # TODO: merge settings
-                    # TODO: apply settings
-                    # studio.set_addon_settings(addon_name, version, repo_addon_settings)
+                    all_settings = tools.merge_dicts(repo_addon_settings, studio_addon_settings)
+                    studio.set_addon_settings(addon_name, version, all_settings)
         else:
             logging.warning("Repository bundle data is not exists")
     return
