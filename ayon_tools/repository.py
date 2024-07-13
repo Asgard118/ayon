@@ -61,7 +61,7 @@ class Repository:
         Get file content from the latest commit of the specified branch
         """
         branch = branch or self.default_branch
-        logging.debug(f"Getting file content {file_name} from {branch}")
+        logging.debug(f"Getting file {branch}:{file_name}")
         branch_ref = f"refs/remotes/origin/{branch}"
         if branch_ref not in self.repo.references:
             raise ValueError(f"Branch {branch} not found")
@@ -74,7 +74,7 @@ class Repository:
             if default is not NONETYPE:
                 return default
             raise FileNotFoundError(
-                f"File {file_name} not found in branch {branch}, {self.workdir}"
+                f"File {branch}:{file_name} not found, {self.workdir}"
             )
         file_blob = self.repo[entry.id]
         data = file_blob.data
