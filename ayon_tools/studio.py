@@ -223,28 +223,7 @@ class StudioSettings:
         """
         Актуальный пресет анатомии из репозитория
         """
-        cls = None
-        try:
-            from .tools import import_subclasses_from_string_module
-
-            custom_class = repo.get_file_content(
-                "shortcut_solvers/anatomy.py", branch=self.name
-            )
-
-            cls = next(
-                import_subclasses_from_string_module(
-                    custom_class, f"{self.name.title()}AnatomyPreset", Solver
-                ),
-                None,
-            )
-
-        except FileNotFoundError:
-            if cls:
-                return cls
-        from .shortcut_solvers.anatomy import AnatomySolver as cls
-
-        # if not cls:
-        #     raise ValueError("Anatomy preset class not found")
+        cls = self.get_shortcut_solver_class("anatomy")
         return cls().solve(project)
 
     def get_rep_bundle(self):
@@ -300,11 +279,6 @@ class StudioSettings:
     def get_rep_addon_attributes(self) -> list: ...
 
     # project from repo
-    def get_rep_project_anatomy(self, project_name: str) -> list:
-        """
-        Актуальная анатомия проекта
-        """
-        # TODO
 
     def get_rep_project_addons(self):
         """
@@ -318,3 +292,69 @@ class StudioSettings:
         from . import base_addon
 
         return base_addon.Addon.get_addon_instance(addon_name, self)
+
+    def get_shortcut_solver_class(self, module_name: str, project_name: str = None):
+        """
+        Функция возвращает класс солвера по имени модуля.
+        Сначала ищет в проекте, потом в студии. Если не найдено то возвращает стандартный солвер.
+        Поиск происходит в директории shortcut_solvers
+        """
+        from .tools import (
+            import_subclasses_from_string_module,
+            import_module_from_dotted_path,
+            get_subclass_from_module,
+        )
+
+        cls = None
+        if project_name:
+            project_anatomy_module_path = (
+                f"projects/{project_name}/shortcut_solvers/{module_name}.py"
+            )
+            custom_module = repo.get_file_content(
+                project_anatomy_module_path, branch=self.name, default=None
+            )
+            if custom_module:
+                logging.debug(
+                    "Looking for custom anatomy preset class from project overrides..."
+                )
+                cls = next(
+                    import_subclasses_from_string_module(
+                        custom_module,
+                        f"{self.name.title()}{project_name.title()}{module_name.title()}",
+                        Solver,
+                    ),
+                    None,
+                )
+                if cls:
+                    logging.debug(
+                        "Using custom anatomy preset class from project overrides"
+                    )
+                    return cls
+        anatomy_module_path = f"shortcut_solvers/{module_name}.py"
+        custom_module = repo.get_file_content(
+            anatomy_module_path, branch=self.name, default=None
+        )
+        if custom_module:
+            logging.debug(
+                "Looking for custom anatomy preset class from studio overrides..."
+            )
+            cls = next(
+                import_subclasses_from_string_module(
+                    custom_module, f"{self.name.title()}{module_name.title()}", Solver
+                ),
+                None,
+            )
+            if cls:
+                logging.debug("Using custom anatomy preset class from studio overrides")
+                return cls
+        default_module = ".".join(
+            __name__.split(".")[:-1] + ["shortcut_solvers", module_name]
+        )
+        logging.debug(f"Importing default module {default_module}")
+        module = import_module_from_dotted_path(default_module)
+        cls = get_subclass_from_module(module, Solver)
+        if cls:
+            logging.debug("Using default shortcut solver class from main package")
+            return cls
+        else:
+            raise NameError(f'Solver module "{module_name}" not found')
