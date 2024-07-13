@@ -101,10 +101,20 @@ def import_module_from_string(module_code, module_name):
 
 def import_subclasses_from_string_module(module_code, module_name, parent_class):
     module = import_module_from_string(module_code, module_name)
+    return get_subclass_from_module(module, parent_class=parent_class)
+
+
+def get_subclass_from_module(module, parent_class):
     for name in dir(module):
         obj = getattr(module, name)
         if inspect.isclass(obj) and issubclass(obj, parent_class):
-            yield obj
+            return obj
+    return None
+
+
+def import_module_from_dotted_path(import_path):
+    module = importlib.import_module(import_path)
+    return module
 
 
 def import_module_from_path(path):
