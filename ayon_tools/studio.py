@@ -19,6 +19,12 @@ class StudioSettings:
         studio_config = self.get_config_data()
         self.auth = api.auth.Auth(**studio_config)
 
+    def __str__(self):
+        return f'StudioSettings("{self.name}")'
+
+    def __repr__(self):
+        return f'<StudioSettings "{self.name}">'
+
     def get_config_data(self):
         studio_local_config = config.get_studio_local_config(self.name)
         if (
@@ -233,25 +239,25 @@ class StudioSettings:
         bundle = repo.get_file_content(self.bundle_config_file, self.name)
         return bundle
 
-    def get_rep_addon_settings(self, addon_name: str, project: str = None):
-        """
-        Актуальные студийные настройки аддона из репозитория
-        """
-        addons = repo.get_file_content(
-            self.studio_config_file.format(addon_name=addon_name), self.name, None
-        )
-        if project:
-            from . import tools
-
-            try:
-                project_addons = repo.get_file_content(
-                    self.project_settings_file.format(project=project), self.name
-                )
-            except FileNotFoundError:
-                logging.debug("No project overrides")
-            # else:
-            #     tools.update_dict_with_changes(addons, project_addons)
-        return addons
+    # def get_rep_addon_settings(self, addon_name: str, project: str = None):
+    #     """
+    #     Актуальные студийные настройки аддона из репозитория
+    #     """
+    #     addons = repo.get_file_content(
+    #         self.studio_config_file.format(addon_name=addon_name), self.name, None
+    #     )
+    #     if project:
+    #         from . import tools
+    #
+    #         try:
+    #             project_addons = repo.get_file_content(
+    #                 self.project_settings_file.format(project=project), self.name
+    #             )
+    #         except FileNotFoundError:
+    #             logging.debug("No project overrides")
+    #         # else:
+    #         #     tools.update_dict_with_changes(addons, project_addons)
+    #     return addons
 
     def get_rep_attributes(self):
         """

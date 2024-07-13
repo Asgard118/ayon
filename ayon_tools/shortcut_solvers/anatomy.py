@@ -62,8 +62,7 @@ class AnatomySolver(Solver):
 
     def resolve_folders(self, data: dict, project_name: str = None):
         folders = (
-            repo.get_file_content(
-                Path("projects", project_name, "folders.yml").as_posix(), default={}
+            repo.get_file_content(Path("projects", project_name, "folders.yml").as_posix(), default={}
             )
             if project_name
             else {}
