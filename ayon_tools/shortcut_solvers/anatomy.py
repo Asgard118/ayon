@@ -8,19 +8,12 @@ from ayon_tools.tools import merge_dicts
 
 class AnatomySolver(Solver):
     def solve(self, project_name: str = None):
-        default_anatomy = self.get_default_anatomy(project_name)
+        default_anatomy = self.get_default_anatomy()
         anatomy_data = self.resolve_shortcuts(default_anatomy, project_name)
         return anatomy_data
 
-    def get_default_anatomy(self, project_name: str = None) -> dict:
-        default_anatomy = repo.get_file_content("defaults/anatomy.json")
-        if project_name:
-            project_default_anatomy = repo.get_file_content(
-                Path("projects", project_name, "anatomy.json").as_posix(), default=None
-            )
-            if project_default_anatomy:
-                return merge_dicts(default_anatomy, project_default_anatomy)
-        return default_anatomy
+    def get_default_anatomy(self):
+        return repo.get_file_content("defaults/anatomy.json")
 
     def resolve_shortcuts(self, default_data, project_name=""):
         # templates
@@ -83,6 +76,7 @@ class AnatomySolver(Solver):
         return data
 
     def resolve_tasks(self, data: dict, project_name: str = None):
+        # task types
         studio_tasks_data = repo.get_file_content("tasks.yml", default={})
         project_tasks_data = (
             repo.get_file_content(
@@ -91,7 +85,6 @@ class AnatomySolver(Solver):
             if project_name
             else {}
         )
-        # task types
         tasks_types_list = project_tasks_data.get(
             "task_types"
         ) or studio_tasks_data.get("task_types")
@@ -102,6 +95,7 @@ class AnatomySolver(Solver):
             fixed_tasks.append(task)
         if fixed_tasks:
             data["task_types"] = fixed_tasks
+
         # task statuses
         statuses_data = project_tasks_data.get("statuses") or studio_tasks_data.get(
             "statuses"
@@ -115,8 +109,29 @@ class AnatomySolver(Solver):
         return data
 
     def resolve_attributes(self, data: dict, project_name: str = None):
+        # studio default settings
+        settings = repo.get_file_content("project-settings.yml", default={})
         # project settings
-        ...
+        if project_name:
+            project_settings = (
+                repo.get_file_content(
+                    Path("projects", project_name, "project-settings.yml").as_posix(),
+                    default={},
+                )
+                if project_name
+                else {}
+            )
+            settings = settings | project_settings
+        resolution: str = settings.pop("resolution", None)
+        if resolution:
+            h, w = resolution.split("x")
+            data["resolutionWidth"], data["resolutionHeight"] = int(h), int(h)
+        for key in ["startDate", "endDate", "description"]:
+            if key in settings:
+                del settings[key]
+
         # applications
-        ...
-        pass
+        # TODO
+        app_addon = ...
+
+        data["attributes"].update(settings)
