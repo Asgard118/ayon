@@ -7,6 +7,8 @@ import logging
 
 # check dicts is match
 def compare_dicts(dict1, dict2, ignore_keys=None):
+    return dict1 == dict2
+
     if ignore_keys is None:
         ignore_keys = []
 
