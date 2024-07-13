@@ -32,7 +32,16 @@ def run(
                 if not fake_apply:
                     studio.update_anatomy_preset(preset_name, repo_studio_anatomy)
             else:
-                logging.info("Anatomy is OK")
+                logging.info("Studio Anatomy is OK")
+        # projects anatomy
+        for project_name in projects:
+            repo_project_anatomy = studio.get_rep_anatomy(project_name)
+            server_project_anatomy = studio.get_project_anatomy(project_name)
+            if not tools.compare_dicts(repo_project_anatomy, server_project_anatomy):
+                logging.info(f"Anatomy is missmatch for {project_name}")
+                if not fake_apply:
+                    studio.set_project_anatomy(project_name, repo_project_anatomy)
+                logging.info("Anatomy was applied")
     else:
         logging.info("Skip anatomy")
 
@@ -82,9 +91,9 @@ def run(
                 )
             else:
                 # create new bundle
-                logging.info("Create bundle: %s", 'staging')
+                logging.info("Create bundle: %s", "staging")
                 studio.create_bundle(
-                    'staging',
+                    "staging",
                     **repo_bundle,
                     is_production=is_staging,
                     is_staging=not is_staging,
@@ -110,7 +119,9 @@ def run(
                     continue
                 else:
                     print("APPLY FOR", addon_name)
-                    all_settings = tools.merge_dicts(repo_addon_settings, studio_addon_settings)
+                    all_settings = tools.merge_dicts(
+                        repo_addon_settings, studio_addon_settings
+                    )
                     studio.set_addon_settings(addon_name, version, all_settings)
         else:
             logging.warning("Repository bundle data is not exists")
