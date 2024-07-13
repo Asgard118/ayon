@@ -131,5 +131,9 @@ def import_subclasses_from_path_module(path, parent_class):
     module = import_module_from_path(path)
     for name in dir(module):
         obj = getattr(module, name)
-        if inspect.isclass(obj) and issubclass(obj, parent_class):
+        if (
+            inspect.isclass(obj)
+            and issubclass(obj, parent_class)
+            and obj is not parent_class
+        ):
             yield obj
