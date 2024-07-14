@@ -5,57 +5,49 @@ import json
 
 class ApplicationsAddon(Addon):
 
-    def transform_data(self, input_data):
-        transformed_data = {}
+    def update_dictionary(self, existing_dict, new_data):
+        if 'applications' not in existing_dict:
+            existing_dict['applications'] = {}
 
-        for item in input_data:
-            name = item['name']
-            label = item['label']
-            versions = item['versions']
+        for app in new_data:
+            app_name = app['name']
+            if app_name in existing_dict['applications']:
+                if 'label' in app:
+                    existing_dict['applications'][app_name]['label'] = app['label']
 
-            transformed_data[name] = {
-                'enabled': True,
-                'environment': '{\n'
-                               '  "MAYA_DISABLE_CLIC_IPM": "Yes",\n'
-                               '  "MAYA_DISABLE_CIP": "Yes",\n'
-                               '  "MAYA_DISABLE_CER": "Yes",\n'
-                               '  "PYMEL_SKIP_MEL_INIT": "Yes",\n'
-                               '  "LC_ALL": "C"\n'
-                               '}\n',
-                'host_name': name,
-                'icon': '{}/app_icons/maya.png',  # Укажите правильный путь к иконке
-                'label': label,
-                'variants': []
-            }
+                if 'versions' in app:
+                    existing_dict['applications'][app_name]['variants'] = []
+                    for version in app['versions']:
+                        variant = {
+                            'name': version['name'],
+                            'label': version.get('label', version['name']),
+                            'executables': {
+                                'windows': [],
+                                'linux': [],
+                                'darwin': []
+                            },
+                            'arguments': {
+                                'windows': [],
+                                'linux': [],
+                                'darwin': []
+                            },
+                            'environment': "{}",
+                            'use_python_2': False
+                        }
 
-            for version in versions:
-                executables = {
-                    'windows': [version['executables']['windows']] if version.get('executables') and version[
-                        'executables'].get('windows') else ['C:\\AppData\\Autodesk\\Maya2024\\bin\\maya.exe'],
-                    'darwin': [version['executables']['darwin']] if version.get('executables') and version[
-                        'executables'].get('darwin') else ['/Applications/Autodesk/maya2024/Maya.app'],
-                    'linux': [version['executables']['linux']] if version.get('executables') and version[
-                        'executables'].get('linux') else ['/usr/autodesk/maya2024/bin/maya']
-                }
+                        if 'executables' in version:
+                            if isinstance(version['executables'], dict):
+                                for platform, path in version['executables'].items():
+                                    variant['executables'][platform] = [path]
+                            elif isinstance(version['executables'], str):
+                                variant['executables']['windows'] = [version['executables']]
 
-                variant = {
-                    'name': version['name'],
-                    'label': version['name'],
-                    'environment': json.dumps({
-                        'MAYA_VERSION': version['name']
-                    }),
-                    'executables': executables,
-                    'arguments': {
-                        'windows': [],
-                        'darwin': [],
-                        'linux': []
-                    },
-                    'use_python_2': False
-                }
+                        existing_dict['applications'][app_name]['variants'].append(variant)
+            else:
+                # принт на время теста функции добавил, для ясности
+                print(f"addon {app_name} not found in settings")
 
-                transformed_data[name]['variants'].append(variant)
-
-        return transformed_data
+        return existing_dict
 
     def get_repo_settings_for_applications(self, project_name: str = None):
         new_settings = (
@@ -65,5 +57,5 @@ class ApplicationsAddon(Addon):
             else {}
         ) or repo.get_file_content('applications.yml')
         default_settings = self.get_default_settings(self.studio.name)
-        settings = self.transform_data(new_settings)
+        settings = self.update_dictionary(default_settings, new_settings)
         return settings
