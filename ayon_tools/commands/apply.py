@@ -18,6 +18,12 @@ def run(
     # COLLECT DATA
     if not operations or ("anatomy" in operations):
         # apply anatomy
+        addon_to_update = studio.addon_for_update()
+        for addon, ver in addon_to_update.items():
+            new_settings = studio.get_addon(addon)
+            addon_settings = new_settings.get_repo_settings_for_applications()
+            studio.set_addon_settings(addon, ver, addon_settings)
+
         repo_studio_anatomy = studio.get_rep_anatomy()
         if not repo_studio_anatomy:
             logging.warning("Repository anatomy data is not exists")
