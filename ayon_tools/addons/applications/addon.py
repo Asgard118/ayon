@@ -1,7 +1,7 @@
 from ayon_tools.base_addon import Addon
 from ayon_tools.repository import repo
 from pathlib import Path
-import json
+
 
 class ApplicationsAddon(Addon):
 
@@ -49,11 +49,11 @@ class ApplicationsAddon(Addon):
 
         return existing_dict
 
-    def get_repo_settings_for_applications(self, project_name: str = None):
+    def solve_shortcuts(self, settings, project: str = None):
         new_settings = (
-            repo.get_file_content(Path("projects", project_name, "folders.yml").as_posix(), default={}
+            repo.get_file_content(Path("projects", project, "folders.yml").as_posix(), default={}
             )
-            if project_name
+            if project
             else {}
         ) or repo.get_file_content('applications.yml')
         default_settings = self.get_default_settings(self.studio.name)

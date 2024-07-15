@@ -21,7 +21,7 @@ def run(
         addon_to_update = studio.addon_for_update()
         for addon, ver in addon_to_update.items():
             new_settings = studio.get_addon(addon)
-            addon_settings = new_settings.get_repo_settings_for_applications()
+            addon_settings = new_settings.solve_shortcuts()
             studio.set_addon_settings(addon, ver, addon_settings)
 
         repo_studio_anatomy = studio.get_rep_anatomy()
