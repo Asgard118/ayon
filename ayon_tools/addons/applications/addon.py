@@ -115,12 +115,53 @@ class ApplicationsAddon(Addon):
         """
         if shortcut_app["name"] not in self._supported_apps:
             raise Exception(f"Unsupported application name: '{shortcut_app['name']}'")
-        # +++++++++++++++++++++++++++++++++++
-        settings = {**shortcut_app}  # TODO
-        # +++++++++++++++++++++++++++++++++++
-        settings["env"] = json.dumps(settings["env"])
-        self.on_app_resolved(settings)
-        return settings
+
+        settings_addon = {**shortcut_app}
+        for app_name, app_data in default_app.items():
+            if not isinstance(app_data, dict):
+                print(f"Warning: Invalid data format for app {app_name}")
+                continue
+            settings = default_app.copy()
+            settings.update(app_data)
+            settings['name'] = app_name
+
+            if 'variants' in settings:
+                updated_variants = []
+                for variant in settings['variants']:
+                    updated_variant = default_app.get('variant', {}).copy()
+                    updated_variant.update(variant)
+                    if 'executables' in updated_variant:
+                        executables = updated_variant['executables']
+                        updated_executables = {
+                            'windows': [],
+                            'linux': [],
+                            'darwin': []
+                        }
+                        if isinstance(executables, dict):
+                            for platform in ['windows', 'linux', 'darwin']:
+                                if platform in executables:
+                                    if isinstance(executables[platform], list):
+                                        updated_executables[platform] = executables[platform]
+                                    elif isinstance(executables[platform], str):
+                                        updated_executables[platform] = [executables[platform]]
+                        elif isinstance(executables, str):
+                            if executables.startswith('/'):
+                                if 'Applications' in executables:
+                                    updated_executables['darwin'] = [executables]
+                                else:
+                                    updated_executables['linux'] = [executables]
+                            else:
+                                updated_executables['windows'] = [executables]
+
+                        updated_variant['executables'] = updated_executables
+                    updated_variants.append(updated_variant)
+                settings['variants'] = updated_variants
+            settings_addon[app_name] = settings
+
+
+        # settings_addon["env"] = json.dumps(settings_addon["env"])
+        self.on_app_resolved(settings_addon)
+        return settings_addon
 
     def on_app_resolved(self, settings):
         pass
