@@ -44,7 +44,7 @@ class ApplicationsAddon(Addon):
             )
             app_name = api_settings.pop("name")
             enabled_apps.append(app_name)
-            apps_settings["applications"][app_name] = api_settings
+            settings["applications"][app_name] = api_settings
         # disable not defined apps
         for app_name in list(settings["applications"].keys()):
             if app_name not in enabled_apps:
@@ -52,7 +52,7 @@ class ApplicationsAddon(Addon):
         return settings
 
     def convert_shortcut_app_to_settings_app(
-        self, shortcut_app: dict, default_app: dict | None
+        self, shortcut_app: dict, default_app: dict or None
     ):
         """
         SOURCE DATA ==================================

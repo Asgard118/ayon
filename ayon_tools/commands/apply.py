@@ -106,7 +106,7 @@ def run(
                 )
         # collect addons
         if repo_bundle:
-            server_addons = studio.get_addons()
+            server_addons = studio.get_server_addons_settings()
             if not server_addons:
                 raise ServerDataError("Wrong server addon data")
             for addon_name, version in repo_bundle["addons"].items():
@@ -119,16 +119,17 @@ def run(
                 if not repo_addon_settings:
                     logging.debug(f"Empty settings for {addon_name}")
                     continue
-                studio_addon_settings = studio.get_addon_settings(addon_name, version)
+                # studio_addon_settings = studio.get_addon_settings(addon_name, version)
+                studio_addon_settings = addon.get_server_settings(version)
+                # studio_addon_settings = server_addons[addon_name]
                 if tools.compare_dicts(repo_addon_settings, studio_addon_settings):
                     logging.info(f"Addon settings is OK: {addon_name}")
                     continue
                 else:
                     print("APPLY FOR", addon_name)
-                    all_settings = tools.merge_dicts(
-                        repo_addon_settings, studio_addon_settings
-                    )
-                    studio.set_addon_settings(addon_name, version, all_settings)
+                    studio.set_addon_settings(addon_name, version, repo_addon_settings)
+            for project_name in projects:
+                ...
         else:
             logging.warning("Repository bundle data is not exists")
     return

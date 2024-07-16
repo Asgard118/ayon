@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class Addon:
     addon_custom_attributes = "addons/{addon_name}/attributes.yml"
+    custom_addon_shortcut_name = "settings.yml"
 
     def __init__(self, name, studio: StudioSettings, **kwargs):
         self.name = name
@@ -22,23 +23,31 @@ class Addon:
         default_settings_path = Path("addons", self.name, "defaults.json").as_posix()
         return repo.get_file_content(default_settings_path, studio_name)
 
-    def get_repo_settings(self):
-        settings_path = Path("addons", self.name, "defaults.json").as_posix()
-        return repo.get_file_content(settings_path, self.studio.name)
-
-    def get_settings(self, project: str = None):
+    def get_repo_settings(self, project=None):
         # get default
         settings = self.get_default_settings(self.studio.name)
         # resolve shortcuts
         settings = self.solve_shortcuts(settings, project)
         return settings
 
-    def build(self) -> str: ...
+    def get_server_settings(self, version):
+        return self.studio.get_addon_settings(self.name, version)
 
     def solve_shortcuts(self, settings: dict, project: str = None):
         # TODO: apply shortcuts
         # TODO: apply project shortcuts
         return settings
+
+    def get_project_shortcut_settings(self, project_name: str):
+        file_settings = repo.get_file_content(
+            f"{project_name}/addons/{self.name}.yml", None
+        )
+        if not file_settings:
+            return repo.get_file_content(
+                f"{project_name}/addons/{self.name}/{self.custom_addon_shortcut_name}",
+                None,
+            )
+        return file_settings
 
     def get_custom_attributes(self):
         attrs = []
@@ -102,3 +111,5 @@ class Addon:
     def get_addon_instance(cls, addon_name: str, studio: StudioSettings, **kwargs):
         addon_class = cls.get_addon_class(addon_name, studio)
         return addon_class(addon_name, studio, **kwargs)
+
+    def build(self) -> str: ...

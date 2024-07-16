@@ -226,8 +226,8 @@ class StudioSettings:
     # anatomy
 
     def addon_for_update(self):
-        data = repo.get_file_content("bundle.yml",self.name)
-        return data['addons']
+        data = repo.get_file_content("bundle.yml", self.name)
+        return data["addons"]
 
     def get_rep_anatomy(self, project: str = None):
         """
