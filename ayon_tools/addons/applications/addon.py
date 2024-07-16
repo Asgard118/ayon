@@ -1,3 +1,5 @@
+import json
+
 from ayon_tools.base_addon import Addon
 from ayon_tools.repository import repo
 
@@ -37,7 +39,9 @@ class ApplicationsAddon(Addon):
         # resolve app list
         enabled_apps = []
         for app in apps_settings:
-            api_settings = self.convert_shortcut_app_to_settings_app(app)
+            api_settings = self.convert_shortcut_app_to_settings_app(
+                app, settings["applications"][app.get("name")]
+            )
             app_name = api_settings.pop("name")
             enabled_apps.append(app_name)
             apps_settings["applications"][app_name] = api_settings
@@ -47,47 +51,9 @@ class ApplicationsAddon(Addon):
                 settings["applications"][app_name]["enabled"] = False
         return settings
 
-    def update_dictionary(self, existing_dict, new_data):
-        if "applications" not in existing_dict:
-            existing_dict["applications"] = {}
-
-        for app in new_data:
-            app_name = app["name"]
-            if app_name in existing_dict["applications"]:
-                if "label" in app:
-                    existing_dict["applications"][app_name]["label"] = app["label"]
-
-                if "versions" in app:
-                    existing_dict["applications"][app_name]["variants"] = []
-                    for version in app["versions"]:
-                        variant = {
-                            "name": version["name"],
-                            "label": version.get("label", version["name"]),
-                            "executables": {"windows": [], "linux": [], "darwin": []},
-                            "arguments": {"windows": [], "linux": [], "darwin": []},
-                            "environment": "{}",
-                            "use_python_2": False,
-                        }
-
-                        if "executables" in version:
-                            if isinstance(version["executables"], dict):
-                                for platform, path in version["executables"].items():
-                                    variant["executables"][platform] = [path]
-                            elif isinstance(version["executables"], str):
-                                variant["executables"]["windows"] = [
-                                    version["executables"]
-                                ]
-
-                        existing_dict["applications"][app_name]["variants"].append(
-                            variant
-                        )
-            else:
-                # принт на время теста функции добавил, для ясности
-                print(f"addon {app_name} not found in settings")
-
-        return existing_dict
-
-    def convert_shortcut_app_to_settings_app(self, shortcut_app: dict):
+    def convert_shortcut_app_to_settings_app(
+        self, shortcut_app: dict, default_app: dict | None
+    ):
         """
         SOURCE DATA ==================================
 
@@ -149,6 +115,54 @@ class ApplicationsAddon(Addon):
         """
         if shortcut_app["name"] not in self._supported_apps:
             raise Exception(f"Unsupported application name: '{shortcut_app['name']}'")
+        # +++++++++++++++++++++++++++++++++++
         settings = {**shortcut_app}  # TODO
-
+        # +++++++++++++++++++++++++++++++++++
+        settings['env'] = json.dumps(settings['env'])
+        self.on_app_resolved(settings)
         return settings
+
+    def on_app_resolved(self, settings):
+        pass
+
+
+    def update_dictionary(self, existing_dict, new_data):
+        if "applications" not in existing_dict:
+            existing_dict["applications"] = {}
+
+        for app in new_data:
+            app_name = app["name"]
+            if app_name in existing_dict["applications"]:
+                if "label" in app:
+                    existing_dict["applications"][app_name]["label"] = app["label"]
+
+                if "versions" in app:
+                    existing_dict["applications"][app_name]["variants"] = []
+                    for version in app["versions"]:
+                        variant = {
+                            "name": version["name"],
+                            "label": version.get("label", version["name"]),
+                            "executables": {"windows": [], "linux": [], "darwin": []},
+                            "arguments": {"windows": [], "linux": [], "darwin": []},
+                            "environment": "{}",
+                            "use_python_2": False,
+                        }
+
+                        if "executables" in version:
+                            if isinstance(version["executables"], dict):
+                                for platform, path in version["executables"].items():
+                                    variant["executables"][platform] = [path]
+                            elif isinstance(version["executables"], str):
+                                variant["executables"]["windows"] = [
+                                    version["executables"]
+                                ]
+
+                        existing_dict["applications"][app_name]["variants"].append(
+                            variant
+                        )
+            else:
+                # принт на время теста функции добавил, для ясности
+                print(f"addon {app_name} not found in settings")
+
+        return existing_dict
+
