@@ -118,13 +118,12 @@ class ApplicationsAddon(Addon):
         # +++++++++++++++++++++++++++++++++++
         settings = {**shortcut_app}  # TODO
         # +++++++++++++++++++++++++++++++++++
-        settings['env'] = json.dumps(settings['env'])
+        settings["env"] = json.dumps(settings["env"])
         self.on_app_resolved(settings)
         return settings
 
     def on_app_resolved(self, settings):
         pass
-
 
     def update_dictionary(self, existing_dict, new_data):
         if "applications" not in existing_dict:
@@ -165,4 +164,3 @@ class ApplicationsAddon(Addon):
                 print(f"addon {app_name} not found in settings")
 
         return existing_dict
-
