@@ -3,6 +3,9 @@ import inspect
 import importlib.util
 import sys
 import logging
+from colorama import Fore, Style, init as _clrm_init
+
+_clrm_init(autoreset=True)
 
 
 # check dicts is match
@@ -137,3 +140,44 @@ def import_subclasses_from_path_module(path, parent_class):
             and obj is not parent_class
         ):
             yield obj
+
+
+def show_dict_diffs(dict1, dict2):
+    from deepdiff import DeepDiff
+
+    diff = DeepDiff(dict1, dict2)
+    if diff:
+        print()
+        print("diffs:", " ".join(diff.keys()))
+        if "dictionary_item_added" in diff:
+            print(f"{Fore.YELLOW}Missing fields:{Style.RESET_ALL}")
+            for item in diff["dictionary_item_added"]:
+                print(f"  {Fore.GREEN}{item}{Style.RESET_ALL}")
+
+        if "dictionary_item_removed" in diff:
+            print(f"{Fore.YELLOW}Extra field:{Style.RESET_ALL}")
+            for item in diff["dictionary_item_removed"]:
+                print(f"  {Fore.RED}{item}{Style.RESET_ALL}")
+        if "type_changes" in diff:
+            print(f"{Fore.YELLOW}Type changed: {Style.RESET_ALL}")
+            for path, item in diff["type_changes"].items():
+                print(
+                    f"  {path}: {Fore.GREEN}{item['old_value']}({item['old_type']}) -> {Fore.RED}{item['new_value']}({item['new_type']}){Style.RESET_ALL}"
+                )
+        if "values_changed" in diff:
+            print(f"{Fore.YELLOW}Changed values:{Style.RESET_ALL}")
+            for item in diff["values_changed"].keys():
+                print(
+                    f"  {Fore.GREEN}{item['old_value']} -> {Fore.RED}{item['new_value']}{Style.RESET_ALL}"
+                )
+        if "iterable_item_removed" in diff:
+            print(f"{Fore.YELLOW}Missing items:{Style.RESET_ALL}")
+            for path, item in diff["iterable_item_removed"].items():
+                print(f"  {Fore.RED}{path}: {item}{Style.RESET_ALL}")
+
+        if "iterable_item_added" in diff:
+            print(f"{Fore.YELLOW}Extra items:{Style.RESET_ALL}")
+            for path, item in diff["iterable_item_added"].items():
+                print(f"  {Fore.RED}{path}: {item}{Style.RESET_ALL}")
+
+        print()
