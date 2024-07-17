@@ -1,7 +1,6 @@
 import logging
 from . import api
 from . import config
-from .base_shortcut_solver import Solver
 from .repository import repo
 
 
@@ -14,7 +13,7 @@ class StudioSettings:
     project_anatomy_file = "projects/{project}/project_anatomy.json"
     anatomy_preset_default_name = "default"
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, **kwargs):
         self.name = name
         studio_config = self.get_config_data()
         self.auth = api.auth.Auth(**studio_config)
@@ -233,7 +232,7 @@ class StudioSettings:
         Актуальный пресет анатомии из репозитория
         """
         cls = self.get_shortcut_solver_class("anatomy")
-        return cls().solve(project)
+        return cls(self).solve(project)
 
     def get_rep_bundle(self):
         """
@@ -308,6 +307,8 @@ class StudioSettings:
         Сначала ищет в проекте, потом в студии. Если не найдено то возвращает стандартный солвер.
         Поиск происходит в директории shortcut_solvers
         """
+        from .base_shortcut_solver import Solver
+
         from .tools import (
             import_subclasses_from_string_module,
             import_module_from_dotted_path,
