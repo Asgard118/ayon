@@ -1,9 +1,11 @@
+import json
 import logging
 
 from ayon_tools.api.attributes import merge_attributes
 from ayon_tools.exceptipns import RepositoryDataError, ServerDataError
 from ayon_tools.studio import StudioSettings
 from ayon_tools import tools
+from ayon_tools.tools import show_dict_diffs
 
 
 def run(
@@ -13,17 +15,12 @@ def run(
     **kwargs,
 ):
     if isinstance(studio, str):
-        studio = StudioSettings(studio)
+        studio = StudioSettings(studio, **kwargs)
     fake_apply = kwargs.get("fake")
+    verbose = kwargs.get("verbose", False)
     # COLLECT DATA
     if not operations or ("anatomy" in operations):
         # apply anatomy
-        addon_to_update = studio.addon_for_update()
-        for addon, ver in addon_to_update.items():
-            new_settings = studio.get_addon(addon)
-            addon_settings = new_settings.solve_shortcuts()
-            studio.set_addon_settings(addon, ver, addon_settings)
-
         repo_studio_anatomy = studio.get_rep_anatomy()
         if not repo_studio_anatomy:
             logging.warning("Repository anatomy data is not exists")
@@ -33,8 +30,10 @@ def run(
                 raise ServerDataError("Server anatomy data query failed")
             if not tools.compare_dicts(repo_studio_anatomy, server_studio_anatomy):
                 logging.info("Anatomy is missmatch")
+                if verbose:
+                    show_dict_diffs(repo_studio_anatomy, server_studio_anatomy)
                 preset_name = studio.get_default_anatomy_preset_name()
-                logging.info(f"Apply actual anatomy to {studio}")
+                logging.info(f"Apply actual anatomy preset {preset_name} to {studio}")
                 if not fake_apply:
                     studio.update_anatomy_preset(preset_name, repo_studio_anatomy)
             else:
@@ -85,7 +84,6 @@ def run(
                 server_bundle = studio.get_staging_bundle()
             else:
                 server_bundle = studio.get_productions_bundle()
-            # staging_server_bundle = studio.get_staging_bundle()
             if not server_bundle:
                 # create new bundle
                 logging.info("Create bundle: %s", bundle_name)
@@ -95,15 +93,7 @@ def run(
                     is_production=not is_staging,
                     is_staging=is_staging,
                 )
-            else:
-                # create new bundle
-                logging.info("Create bundle: %s", "staging")
-                studio.create_bundle(
-                    "staging",
-                    **repo_bundle,
-                    is_production=is_staging,
-                    is_staging=not is_staging,
-                )
+
         # collect addons
         if repo_bundle:
             server_addons = studio.get_server_addons_settings()
@@ -132,6 +122,8 @@ def run(
                 ...
         else:
             logging.warning("Repository bundle data is not exists")
+    else:
+        logging.info("Skip bundle")
     return
     projects = projects or studio.get_project_names()
     # apply projects settings
