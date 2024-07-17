@@ -48,7 +48,8 @@ class ApplicationsAddon(Addon):
         # disable not defined apps
         for app_name in list(settings["applications"].keys()):
             if app_name not in enabled_apps:
-                settings["applications"][app_name]["enabled"] = False
+                if isinstance(settings["applications"][app_name], dict):
+                        settings["applications"][app_name]["enable"] = False
         return settings
 
     def convert_shortcut_app_to_settings_app(

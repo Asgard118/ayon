@@ -36,6 +36,9 @@ class StudioSettings:
 
     # SERVER ##################################################################
 
+    def get_server_addons_settings(self, name: str, ver: str):
+        return api.addons.get_addon_studio_settings(name, ver, auth=self.auth)
+
     def get_projects(self):
         return api.projects.get_projects(auth=self.auth)
 
@@ -224,10 +227,6 @@ class StudioSettings:
 
     #  REPOSITORY ################################################################
     # anatomy
-
-    def addon_for_update(self):
-        data = repo.get_file_content("bundle.yml", self.name)
-        return data["addons"]
 
     def get_rep_anatomy(self, project: str = None):
         """
