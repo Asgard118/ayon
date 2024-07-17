@@ -49,7 +49,7 @@ class ApplicationsAddon(Addon):
         for app_name in list(settings["applications"].keys()):
             if app_name not in enabled_apps:
                 if isinstance(settings["applications"][app_name], dict):
-                        settings["applications"][app_name]["enable"] = False
+                    settings["applications"][app_name]["enable"] = False
         return settings
 
     def convert_shortcut_app_to_settings_app(
@@ -124,41 +124,40 @@ class ApplicationsAddon(Addon):
                 continue
             settings = default_app.copy()
             settings.update(app_data)
-            settings['name'] = app_name
+            settings["name"] = app_name
 
-            if 'variants' in settings:
+            if "variants" in settings:
                 updated_variants = []
-                for variant in settings['variants']:
-                    updated_variant = default_app.get('variant', {}).copy()
+                for variant in settings["variants"]:
+                    updated_variant = default_app.get("variant", {}).copy()
                     updated_variant.update(variant)
-                    if 'executables' in updated_variant:
-                        executables = updated_variant['executables']
-                        updated_executables = {
-                            'windows': [],
-                            'linux': [],
-                            'darwin': []
-                        }
+                    if "executables" in updated_variant:
+                        executables = updated_variant["executables"]
+                        updated_executables = {"windows": [], "linux": [], "darwin": []}
                         if isinstance(executables, dict):
-                            for platform in ['windows', 'linux', 'darwin']:
+                            for platform in ["windows", "linux", "darwin"]:
                                 if platform in executables:
                                     if isinstance(executables[platform], list):
-                                        updated_executables[platform] = executables[platform]
+                                        updated_executables[platform] = executables[
+                                            platform
+                                        ]
                                     elif isinstance(executables[platform], str):
-                                        updated_executables[platform] = [executables[platform]]
+                                        updated_executables[platform] = [
+                                            executables[platform]
+                                        ]
                         elif isinstance(executables, str):
-                            if executables.startswith('/'):
-                                if 'Applications' in executables:
-                                    updated_executables['darwin'] = [executables]
+                            if executables.startswith("/"):
+                                if "Applications" in executables:
+                                    updated_executables["darwin"] = [executables]
                                 else:
-                                    updated_executables['linux'] = [executables]
+                                    updated_executables["linux"] = [executables]
                             else:
-                                updated_executables['windows'] = [executables]
+                                updated_executables["windows"] = [executables]
 
-                        updated_variant['executables'] = updated_executables
+                        updated_variant["executables"] = updated_executables
                     updated_variants.append(updated_variant)
-                settings['variants'] = updated_variants
+                settings["variants"] = updated_variants
             settings_addon[app_name] = settings
-
 
         # settings_addon["env"] = json.dumps(settings_addon["env"])
         self.on_app_resolved(settings_addon)
@@ -206,3 +205,15 @@ class ApplicationsAddon(Addon):
                 print(f"addon {app_name} not found in settings")
 
         return existing_dict
+
+    def get_app_list_attributes(self):
+        """
+        TODO: создать валидный список приложений и их версий
+        Пример:
+        [
+          "hiero/15-0",
+          "houdini/19-0",
+          "maya/2023"
+        ]
+        """
+        return []
