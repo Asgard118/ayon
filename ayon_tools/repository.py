@@ -6,11 +6,13 @@ import pygit2
 
 from . import config
 
-NONETYPE = type("NoneType")
+NOT_SET_TYPE = type("NoneType")
 
 
 class Repository:
     default_branch = "main"
+    skip_update = False
+    read_from_current_files = False
 
     def __init__(self):
         self.url = config.REPOSITORY_URL
@@ -29,19 +31,21 @@ class Repository:
             logging.info(f"Cloning repository from {self.url} to {self.workdir}")
             self._git_repo = pygit2.clone_repository(self.url, self.workdir.as_posix())
         else:
+            self._git_repo = pygit2.Repository(self.workdir / ".git")
+            if self.skip_update:
+                logging.info("Skip updating repository")
+                return
             logging.info(f"Updating repository in {self.workdir}")
             # update all if exists
-            repo = pygit2.Repository(self.workdir / ".git")
-            repo.reset(repo.head.target, pygit2.GIT_RESET_HARD)
-            remote = repo.remotes["origin"]
+            self._git_repo.reset(self._git_repo.head.target, pygit2.GIT_RESET_HARD)
+            remote = self._git_repo.remotes["origin"]
             remote.fetch()
-            for branch in repo.branches:
+            for branch in self._git_repo.branches:
                 if branch.startswith("refs/remotes/origin/"):
                     local_branch = branch.replace("refs/remotes/origin/", "refs/heads/")
-                    if local_branch in repo.branches:
-                        repo.checkout(local_branch)
-                        repo.merge(repo.get(branch))
-            self._git_repo = repo
+                    if local_branch in self._git_repo.branches:
+                        self._git_repo.checkout(local_branch)
+                        self._git_repo.merge(self._git_repo.get(branch))
 
     def set_branch(self, branch_name: str):
         # check current branch
@@ -56,12 +60,30 @@ class Repository:
         else:
             logging.info(f"Already on branch {branch_name}")
 
-    def get_file_content(self, file_name: str, branch: str = None, default=NONETYPE):
+    def get_file_content(
+        self, file_name: str, branch: str = None, default=NOT_SET_TYPE
+    ):
         """
         Get file content from the latest commit of the specified branch
         """
         branch = branch or self.default_branch
         logging.debug(f"Getting file {branch}:{file_name}")
+        if self.read_from_current_files:
+            data = self.read_from_file(file_name, default)
+        else:
+            data = self.read_from_repo(file_name, branch, default)
+        if Path(file_name).suffix == ".json":
+            logging.debug("Decoding JSON")
+            data = json.loads(data)
+        elif Path(file_name).suffix in (".yaml", ".yml"):
+            logging.debug("Decoding YAML")
+            data = yaml.safe_load(data)
+        return data
+
+    def read_from_repo(self, file_name, branch, default):
+        """
+        Чтение файла из данных репозитория. Стандартный способ чтения.
+        """
         branch_ref = f"refs/remotes/origin/{branch}"
         if branch_ref not in self.repo.references:
             raise ValueError(f"Branch {branch} not found")
@@ -71,19 +93,27 @@ class Repository:
         try:
             entry = tree[file_name]
         except KeyError:
-            if default is not NONETYPE:
+            if default is not NOT_SET_TYPE:
                 return default
             raise FileNotFoundError(
                 f"File {branch}:{file_name} not found, {self.workdir}"
             )
         file_blob = self.repo[entry.id]
         data = file_blob.data
-        if Path(file_name).suffix == ".json":
-            logging.debug("Decoding JSON")
-            data = json.loads(data)
-        elif Path(file_name).suffix in (".yaml", ".yml"):
-            logging.debug("Decoding YAML")
-            data = yaml.safe_load(data)
+        return data
+
+    def read_from_file(self, filename, default):
+        """
+        Чтение файлов из текущего активного состояния.
+        Режим разработки, не учитывает имя ветки.
+        """
+        file_path = Path(self.workdir) / filename
+        if not file_path.exists():
+            if default is not NOT_SET_TYPE:
+                return default
+            raise FileNotFoundError(f"File {file_path} not found")
+        with open(file_path, "r") as f:
+            data = f.read()
         return data
 
 

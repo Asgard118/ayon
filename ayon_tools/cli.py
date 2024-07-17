@@ -4,16 +4,40 @@ import click
 
 
 @click.group()
-@click.option("--debug", is_flag=True, default=False, help="Enable debug mode")
-@click.option("--stage", is_flag=True, default=False, help="Enable stage mode")
-@click.option("--fake", is_flag=True, default=False, help="Fake apply changes")
+@click.option("-d", "--debug", is_flag=True, default=False, help="Enable debug mode")
+@click.option("-s", "--stage", is_flag=True, default=False, help="Enable stage mode")
+@click.option("-f", "--fake", is_flag=True, default=False, help="Fake apply changes")
+@click.option("-v", "--verbose", is_flag=True, default=False, help="Fake apply changes")
+@click.option(
+    "--skip_update",
+    is_flag=True,
+    default=False,
+    help="Do not update config repository if exists",
+)
+@click.option(
+    "--read_current_files",
+    is_flag=True,
+    default=False,
+    help="Read raw files from repository",
+)
 @click.pass_context
-def cli(ctx, debug, stage, fake):
+def cli(ctx, debug, stage, fake, skip_update, read_current_files, verbose):
     ctx.ensure_object(dict)
     if debug:
         os.environ["DEBUG"] = "1"
         logging.getLogger().setLevel(logging.DEBUG)
         logging.debug("Debug mode ON")
+
+    if skip_update:
+        from .repository import repo
+
+        logging.info("Skip update config repository")
+        repo.skip_update = skip_update
+    if read_current_files:
+        from .repository import repo
+
+        logging.info("Read repository data from current files")
+        repo.read_from_current_files = read_current_files
 
 
 @cli.command()
