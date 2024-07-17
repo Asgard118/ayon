@@ -1,9 +1,6 @@
 from pathlib import Path
-from pprint import pprint
-
 from ayon_tools.base_shortcut_solver import Solver
 from ayon_tools.repository import repo
-from ayon_tools.tools import merge_dicts
 
 
 class AnatomySolver(Solver):
@@ -13,7 +10,7 @@ class AnatomySolver(Solver):
         return anatomy_data
 
     def get_default_anatomy(self):
-        return repo.get_file_content("defaults/anatomy.json")
+        return repo.get_file_content("defaults/anatomy.json", branch=self.studio.name)
 
     def resolve_shortcuts(self, default_data, project_name=""):
         # templates
@@ -36,6 +33,7 @@ class AnatomySolver(Solver):
         repo_roots = studio_data.get("roots", {}) | project_data.get("roots", {})
         roots = []
         for root_name, root_data in repo_roots.items():
+            root_data["darwin"] = root_data.pop("macos", root_data.pop("darwin", ""))
             roots.append(dict(name=root_name, **root_data))
             # merge roots
         data["roots"] = roots
@@ -54,6 +52,8 @@ class AnatomySolver(Solver):
                         dict(name=template_name, **template_data)
                     )
         data["templates"] = templates_data
+        for other_template in ("delivery", "staging", "others"):
+            data["templates"].setdefault(other_template, [])
         # template variables
         variables = studio_data.get("variables", {}) | project_data.get("variables", {})
         if variables:
@@ -62,7 +62,8 @@ class AnatomySolver(Solver):
 
     def resolve_folders(self, data: dict, project_name: str = None):
         folders = (
-            repo.get_file_content(Path("projects", project_name, "folders.yml").as_posix(), default={}
+            repo.get_file_content(
+                Path("projects", project_name, "folders.yml").as_posix(), default={}
             )
             if project_name
             else {}
@@ -71,6 +72,7 @@ class AnatomySolver(Solver):
             for folder in folders:
                 folder.setdefault("icon", "")
                 folder.setdefault("original_name", folder["name"])
+                folder.setdefault("shortName", folder.pop("short_name"))
             data["folder_types"] = folders
         return data
 
@@ -109,10 +111,11 @@ class AnatomySolver(Solver):
 
     def resolve_attributes(self, data: dict, project_name: str = None):
         # studio default settings
-        settings = repo.get_file_content("project-settings.yml", default={})
+        studio_attrs = repo.get_file_content("project-settings.yml", default={})
+
         # project settings
         if project_name:
-            project_settings = (
+            project_attrs = (
                 repo.get_file_content(
                     Path("projects", project_name, "project-settings.yml").as_posix(),
                     default={},
@@ -120,17 +123,24 @@ class AnatomySolver(Solver):
                 if project_name
                 else {}
             )
-            settings = settings | project_settings
-        resolution: str = settings.pop("resolution", None)
+            studio_attrs = studio_attrs | project_attrs
+
+        resolution: str | None = studio_attrs.pop("resolution", None)
         if resolution:
             h, w = resolution.split("x")
-            data["resolutionWidth"], data["resolutionHeight"] = int(h), int(h)
+            studio_attrs["resolutionWidth"], studio_attrs["resolutionHeight"] = int(
+                h
+            ), int(w)
+
         for key in ["startDate", "endDate", "description"]:
-            if key in settings:
-                del settings[key]
-
+            if key in studio_attrs:
+                del studio_attrs[key]
         # applications
-        # TODO
-        app_addon = ...
+        app_addon = self.studio.get_addon("applications")
+        app_list = app_addon.get_app_list_attributes()
+        data["attributes"]["applications"] = app_list
+        # apply attrs
+        data["attributes"].update(studio_attrs)
 
-        data["attributes"].update(settings)
+        # fix types
+        data["attributes"]["fps"] = float(data["attributes"]["fps"])
