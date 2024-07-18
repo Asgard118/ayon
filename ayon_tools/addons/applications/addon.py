@@ -52,9 +52,7 @@ class ApplicationsAddon(Addon):
                     settings["applications"][app_name]["enable"] = False
         return settings
 
-    def convert_shortcut_app_to_settings_app(
-        self, shortcut_app: dict, default_app: dict or None
-    ):
+    def convert_shortcut_app_to_settings_app(self, shortcut_app: dict, default_app: dict or None):
         """
         SOURCE DATA ==================================
 
@@ -207,6 +205,16 @@ class ApplicationsAddon(Addon):
         return existing_dict
 
     def get_app_list_attributes(self):
+        data = []
+        base = self.get_repo_settings()
+        input_data = repo.get_file_content("project-settings.yml")
+        for app_data in input_data['applications']:
+            for name, versions in app_data.items():
+                if name in base['applications'] and 'variants' in base['applications'][name]:
+                    app_variants = base['applications'][name]['variants']
+                    for variant in app_variants:
+                        if any(version in variant['label'] for version in versions):
+                            data.append(f"{name}/{variant['name']}")
         """
         TODO: создать валидный список приложений и их версий
         Пример:
@@ -216,4 +224,4 @@ class ApplicationsAddon(Addon):
           "maya/2023"
         ]
         """
-        return []
+        return data
