@@ -166,9 +166,9 @@ def show_dict_diffs(dict1, dict2):
                 )
         if "values_changed" in diff:
             print(f"{Fore.YELLOW}Changed values:{Style.RESET_ALL}")
-            for item in diff["values_changed"].keys():
+            for path, item in diff["values_changed"].items():
                 print(
-                    f"  {Fore.GREEN}{item['old_value']} -> {Fore.RED}{item['new_value']}{Style.RESET_ALL}"
+                    f" {path}  {Fore.GREEN}{item['old_value']} -> {Fore.RED}{item['new_value']}{Style.RESET_ALL}"
                 )
         if "iterable_item_removed" in diff:
             print(f"{Fore.YELLOW}Missing items:{Style.RESET_ALL}")
