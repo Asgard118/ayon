@@ -5,29 +5,6 @@ from ayon_tools.repository import repo
 
 
 class ApplicationsAddon(Addon):
-    _supported_apps = [
-        "maya",
-        "adsk_3dsmax",
-        "flame",
-        "nuke",
-        "nukeassist",
-        "nukex",
-        "nukestudio",
-        "hiero",
-        "fusion",
-        "resolve",
-        "houdini",
-        "blender",
-        "harmony",
-        "tvpaint",
-        "photoshop",
-        "aftereffects",
-        "celaction",
-        "substancepainter",
-        "unreal",
-        "wrap",
-        "additional_apps",
-    ]
 
     def solve_shortcuts(self, settings: dict, project: str = None):
         apps_settings = repo.get_file_content(
@@ -112,7 +89,8 @@ class ApplicationsAddon(Addon):
           ]
         },
         """
-        if shortcut_app["name"] not in self._supported_apps:
+        supported_apps = repo.get_file_content("defaults/bundle.json", branch=self.studio.name)
+        if shortcut_app["name"] not in supported_apps["addons"]:
             raise Exception(f"Unsupported application name: '{shortcut_app['name']}'")
 
         settings_addon = {**shortcut_app}
