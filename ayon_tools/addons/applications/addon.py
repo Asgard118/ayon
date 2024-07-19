@@ -15,7 +15,15 @@ class ApplicationsAddon(Addon):
 
         # resolve app list
         enabled_apps = []
+        supported_apps = repo.get_file_content(
+            "defaults/bundle.json", branch=self.studio.name
+        )
+
         for app in apps_settings:
+            # check app name
+            if app["name"] not in supported_apps["addons"]:
+                raise Exception(f"Unsupported application name: '{app['name']}'")
+            # apply shortcut
             api_settings = self.convert_shortcut_app_to_settings_app(
                 app, settings["applications"][app.get("name")]
             )
@@ -29,18 +37,20 @@ class ApplicationsAddon(Addon):
                     settings["applications"][app_name]["enable"] = False
         return settings
 
-    def convert_shortcut_app_to_settings_app(self, shortcut_app: dict, default_app: dict or None):
+    def convert_shortcut_app_to_settings_app(
+        self, shortcut_app: dict, default_app: dict or None
+    ):
         """
-        SOURCE DATA ==================================
+        shortcut_app = {
+                name: maya
+                label: Maya
+                versions: [
+                    {name: 2024},
+                    {name: 2025},
+                ]
+            }
 
-        - name: maya
-          label: Maya
-          versions:
-            - name: 2024
-            - name: 2025
-
-        TARGET DATA ==================================
-        {
+        default_app = {
           "name": "maya",   // will removed later
           "enabled": true,
           "label": "Maya",
@@ -89,12 +99,13 @@ class ApplicationsAddon(Addon):
           ]
         },
         """
-        supported_apps = repo.get_file_content("defaults/bundle.json", branch=self.studio.name)
-        if shortcut_app["name"] not in supported_apps["addons"]:
-            raise Exception(f"Unsupported application name: '{shortcut_app['name']}'")
-
         settings_addon = {**shortcut_app}
-        for app_name, app_data in default_app.items():
+        for (
+            app_name,
+            app_data,
+        ) in (
+            default_app.items()
+        ):  # TODO здесь нет итерации, мы получаем словарь с одним приложением
             if not isinstance(app_data, dict):
                 print(f"Warning: Invalid data format for app {app_name}")
                 continue
@@ -183,23 +194,25 @@ class ApplicationsAddon(Addon):
         return existing_dict
 
     def get_app_list_attributes(self):
-        data = []
-        base = self.get_repo_settings()
-        input_data = repo.get_file_content("project-settings.yml")
-        for app_data in input_data['applications']:
-            for name, versions in app_data.items():
-                if name in base['applications'] and 'variants' in base['applications'][name]:
-                    app_variants = base['applications'][name]['variants']
-                    for variant in app_variants:
-                        if any(version in variant['label'] for version in versions):
-                            data.append(f"{name}/{variant['name']}")
         """
-        TODO: создать валидный список приложений и их версий
-        Пример:
+        Создаёт валидный список приложений и их версий
         [
           "hiero/15-0",
           "houdini/19-0",
           "maya/2023"
         ]
         """
+        data = []
+        base = self.get_repo_settings()
+        input_data = repo.get_file_content("project-settings.yml")
+        for app_data in input_data["applications"]:
+            for name, versions in app_data.items():
+                if (
+                    name in base["applications"]
+                    and "variants" in base["applications"][name]
+                ):
+                    app_variants = base["applications"][name]["variants"]
+                    for variant in app_variants:
+                        if any(version in variant["label"] for version in versions):
+                            data.append(f"{name}/{variant['name']}")
         return data
