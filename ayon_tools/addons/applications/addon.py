@@ -15,16 +15,8 @@ class ApplicationsAddon(Addon):
 
         # resolve app list
         enabled_apps = []
-        supported_apps = repo.get_file_content(
-            "defaults/bundle.json", branch=self.studio.name
-        )
-
         for app in apps_settings:
-            # check app name
-            if app["name"] not in supported_apps["addons"]:
-                raise Exception(f"Unsupported application name: '{app['name']}'")
-            # apply shortcut
-            api_settings = self.convert_shortcut_app_to_settings_app(
+            api_settings = self.update_dictionary(
                 app, settings["applications"][app.get("name")]
             )
             app_name = api_settings.pop("name")
@@ -37,20 +29,18 @@ class ApplicationsAddon(Addon):
                     settings["applications"][app_name]["enable"] = False
         return settings
 
-    def convert_shortcut_app_to_settings_app(
-        self, shortcut_app: dict, default_app: dict or None
-    ):
+    def convert_shortcut_app_to_settings_app(self, shortcut_app: dict, default_app: dict or None):
         """
-        shortcut_app = {
-                name: maya
-                label: Maya
-                versions: [
-                    {name: 2024},
-                    {name: 2025},
-                ]
-            }
+        SOURCE DATA ==================================
 
-        default_app = {
+        - name: maya
+          label: Maya
+          versions:
+            - name: 2024
+            - name: 2025
+
+        TARGET DATA ==================================
+        {
           "name": "maya",   // will removed later
           "enabled": true,
           "label": "Maya",
@@ -99,120 +89,84 @@ class ApplicationsAddon(Addon):
           ]
         },
         """
-        settings_addon = {**shortcut_app}
-        for (
-            app_name,
-            app_data,
-        ) in (
-            default_app.items()
-        ):  # TODO здесь нет итерации, мы получаем словарь с одним приложением
-            if not isinstance(app_data, dict):
-                print(f"Warning: Invalid data format for app {app_name}")
-                continue
-            settings = default_app.copy()
-            settings.update(app_data)
-            settings["name"] = app_name
+        supported_apps = repo.get_file_content("defaults/bundle.json", branch=self.studio.name)
+        if shortcut_app["name"] not in supported_apps["addons"]:
+            raise Exception(f"Unsupported application name: '{shortcut_app['name']}'")
 
-            if "variants" in settings:
-                updated_variants = []
-                for variant in settings["variants"]:
-                    updated_variant = default_app.get("variant", {}).copy()
-                    updated_variant.update(variant)
-                    if "executables" in updated_variant:
-                        executables = updated_variant["executables"]
-                        updated_executables = {"windows": [], "linux": [], "darwin": []}
-                        if isinstance(executables, dict):
-                            for platform in ["windows", "linux", "darwin"]:
-                                if platform in executables:
-                                    if isinstance(executables[platform], list):
-                                        updated_executables[platform] = executables[
-                                            platform
-                                        ]
-                                    elif isinstance(executables[platform], str):
-                                        updated_executables[platform] = [
-                                            executables[platform]
-                                        ]
-                        elif isinstance(executables, str):
-                            if executables.startswith("/"):
-                                if "Applications" in executables:
-                                    updated_executables["darwin"] = [executables]
-                                else:
-                                    updated_executables["linux"] = [executables]
-                            else:
-                                updated_executables["windows"] = [executables]
-
-                        updated_variant["executables"] = updated_executables
-                    updated_variants.append(updated_variant)
-                settings["variants"] = updated_variants
-            settings_addon[app_name] = settings
-
+        settings_addon = self.update_dictionary(default_app, shortcut_app)
         # settings_addon["env"] = json.dumps(settings_addon["env"])
         self.on_app_resolved(settings_addon)
+        print(settings_addon)
         return settings_addon
 
     def on_app_resolved(self, settings):
         pass
 
     def update_dictionary(self, existing_dict, new_data):
-        if "applications" not in existing_dict:
-            existing_dict["applications"] = {}
+        from pprint import pprint
+        pprint(new_data)
+        app_name = new_data.get("host_name") or new_data.get("name")
+        if app_name in existing_dict:
+            app_info = existing_dict[app_name]
 
-        for app in new_data:
-            app_name = app["name"]
-            if app_name in existing_dict["applications"]:
-                if "label" in app:
-                    existing_dict["applications"][app_name]["label"] = app["label"]
+            app_info["enabled"] = new_data.get("enabled", app_info.get("enabled", True))
+            app_info["label"] = new_data.get("label", app_info.get("label", app_name))
+            app_info["host_name"] = new_data.get("host_name", app_info.get("host_name", app_name))
+            app_info["icon"] = new_data.get("icon", app_info.get("icon", ""))
+            app_info["environment"] = new_data.get("environment", app_info.get("environment", "{}"))
 
-                if "versions" in app:
-                    existing_dict["applications"][app_name]["variants"] = []
-                    for version in app["versions"]:
-                        variant = {
-                            "name": version["name"],
-                            "label": version.get("label", version["name"]),
-                            "executables": {"windows": [], "linux": [], "darwin": []},
-                            "arguments": {"windows": [], "linux": [], "darwin": []},
+            new_variants = new_data.get("variants") or new_data.get("versions", [])
+            if new_variants:
+                app_info["variants"] = []
+                for new_variant in new_variants:
+                    variant_name = new_variant if isinstance(new_variant, str) else new_variant.get("name")
+
+                    # Ищем существующий вариант с таким же именем
+                    existing_variant = next(
+                        (v for v in existing_dict[app_name].get("variants", []) if v["name"] == variant_name), None)
+
+                    if existing_variant:
+                        # Если вариант существует, используем его данные
+                        updated_variant = existing_variant.copy()
+                    else:
+                        # Если вариант не существует, создаем новый с дефолтными значениями
+                        updated_variant = {
+                            "name": variant_name,
+                            "label": variant_name,
                             "environment": "{}",
                             "use_python_2": False,
+                            "executables": {"windows": [], "linux": [], "darwin": []},
+                            "arguments": {"windows": [], "linux": [], "darwin": []}
                         }
 
-                        if "executables" in version:
-                            if isinstance(version["executables"], dict):
-                                for platform, path in version["executables"].items():
-                                    variant["executables"][platform] = [path]
-                            elif isinstance(version["executables"], str):
-                                variant["executables"]["windows"] = [
-                                    version["executables"]
-                                ]
+                    # Обновляем данные варианта, если они предоставлены в new_data
+                    if isinstance(new_variant, dict):
+                        updated_variant.update(new_variant)
 
-                        existing_dict["applications"][app_name]["variants"].append(
-                            variant
-                        )
-            else:
-                # принт на время теста функции добавил, для ясности
-                print(f"addon {app_name} not found in settings")
+                    app_info["variants"].append(updated_variant)
+        else:
+            existing_dict[app_name] = new_data
 
         return existing_dict
 
     def get_app_list_attributes(self):
+        data = []
+        base = self.get_repo_settings()
+        input_data = repo.get_file_content("project-settings.yml")
+        for app_data in input_data['applications']:
+            for name, versions in app_data.items():
+                if name in base['applications'] and 'variants' in base['applications'][name]:
+                    app_variants = base['applications'][name]['variants']
+                    for variant in app_variants:
+                        if any(version in variant['label'] for version in versions):
+                            data.append(f"{name}/{variant['name']}")
         """
-        Создаёт валидный список приложений и их версий
+        TODO: создать валидный список приложений и их версий
+        Пример:
         [
           "hiero/15-0",
           "houdini/19-0",
           "maya/2023"
         ]
         """
-        data = []
-        base = self.get_repo_settings()
-        input_data = repo.get_file_content("project-settings.yml")
-        for app_data in input_data["applications"]:
-            for name, versions in app_data.items():
-                if (
-                    name in base["applications"]
-                    and "variants" in base["applications"][name]
-                ):
-                    app_variants = base["applications"][name]["variants"]
-                    for variant in app_variants:
-                        if any(version in variant["label"] for version in versions):
-                            data.append(f"{name}/{variant['name']}")
         return data

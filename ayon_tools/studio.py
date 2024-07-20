@@ -35,8 +35,8 @@ class StudioSettings:
 
     # SERVER ##################################################################
 
-    def get_server_addons_settings(self, name: str, ver: str):
-        return api.addons.get_addon_studio_settings(name, ver, auth=self.auth)
+    def get_server_addons_settings(self):
+        return api.addons.get_addon_studio_settings(auth=self.auth)
 
     def get_projects(self):
         return api.projects.get_projects(auth=self.auth)
@@ -51,6 +51,9 @@ class StudioSettings:
 
     def get_addon_settings(self, name: str, ver: str):
         return api.addons.get_addon_studio_settings(name, ver, auth=self.auth)
+
+    def get_addons_settings(self):
+        return api.addons.get_addons_settings(auth=self.auth)
 
     def set_addon_settings(self, name: str, ver: str, settings: dict):
         api.addons.set_studio_settings(name, ver, settings)
