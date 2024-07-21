@@ -161,24 +161,44 @@ class ApplicationsAddon(Addon):
 
         return existing_dict
 
-    def get_app_list_attributes(self):
-        data = []
-        base = self.get_repo_settings()
-        input_data = repo.get_file_content("project-settings.yml")
-        for app_data in input_data['applications']:
-            for name, versions in app_data.items():
-                if name in base['applications'] and 'variants' in base['applications'][name]:
-                    app_variants = base['applications'][name]['variants']
-                    for variant in app_variants:
-                        if any(version in variant['label'] for version in versions):
-                            data.append(f"{name}/{variant['name']}")
+    def get_app_list_attributes(self, project_name: str = None):
         """
-        TODO: создать валидный список приложений и их версий
-        Пример:
+        Example:
         [
           "hiero/15-0",
           "houdini/19-0",
           "maya/2023"
         ]
         """
+        data = []
+        # get settings
+        app_list: dict = repo.get_file_content("project-settings.yml", default={}).get(
+            "applications", []
+        )
+        if project_name:
+            app_list: dict = (
+                repo.get_file_content(
+                    f"projects/{project_name}/project-settings.yml", default={}
+                ).get("applications", [])
+                or app_list
+            )
+
+        if not app_list:
+            return data
+        # get all registered apps
+        all_apps = self.get_repo_settings().get("applications")
+        for app_name, versions in app_list.items():
+            if app_name not in all_apps:
+                raise NameError(f"Application '{app_name}' not found in repository")
+            for version in versions:
+                all_variants = {
+                    var["label"]: var["name"] for var in all_apps[app_name]["variants"]
+                }
+                version = str(version)
+                if version not in all_variants:
+                    raise NameError(
+                        f"App Version '{app_name}/{version}' not found in registered application: {list(all_variants.keys())}"
+                    )
+                # add app attribute
+                data.append(f"{app_name}/{all_variants[version]}")
         return data
