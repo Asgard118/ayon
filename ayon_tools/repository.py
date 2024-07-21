@@ -75,7 +75,7 @@ class Repository:
         if Path(file_name).suffix == ".json":
             logging.debug("Decoding JSON")
             data = json.loads(data)
-        elif Path(file_name).suffix in (".yaml", ".yml"):
+        elif data and Path(file_name).suffix in (".yaml", ".yml"):
             logging.debug("Decoding YAML")
             data = yaml.safe_load(data)
         return data
