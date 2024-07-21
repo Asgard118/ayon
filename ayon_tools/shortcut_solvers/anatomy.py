@@ -12,7 +12,7 @@ class AnatomySolver(Solver):
     def get_default_anatomy(self):
         return repo.get_file_content("defaults/anatomy.json", branch=self.studio.name)
 
-    def resolve_shortcuts(self, default_data, project_name=""):
+    def resolve_shortcuts(self, default_data, project_name: str = None):
         # templates
         self.resolve_templates(default_data, project_name)
         self.resolve_folders(default_data, project_name)
@@ -61,13 +61,10 @@ class AnatomySolver(Solver):
             data["templates"].update(variables)
 
     def resolve_folders(self, data: dict, project_name: str = None):
-        folders = (
-            repo.get_file_content(
-                Path("projects", project_name, "folders.yml").as_posix(), default={}
-            )
-            if project_name
-            else {}
-        ) or repo.get_file_content("folders.yml", default={})
+        project_folders = repo.get_file_content(
+            f"projects/{project_name}/folders.yml", default=None
+        )
+        folders = project_folders or repo.get_file_content("folders.yml", default={})
         if folders:
             for folder in folders:
                 folder.setdefault("icon", "")
@@ -79,12 +76,8 @@ class AnatomySolver(Solver):
     def resolve_tasks(self, data: dict, project_name: str = None):
         # task types
         studio_tasks_data = repo.get_file_content("tasks.yml", default={})
-        project_tasks_data = (
-            repo.get_file_content(
-                Path("projects", project_name, "tasks.yml").as_posix(), default={}
-            )
-            if project_name
-            else {}
+        project_tasks_data = repo.get_file_content(
+            f"projects/{project_name}/tasks.yml", default={}
         )
         tasks_types_list = project_tasks_data.get(
             "task_types"
@@ -112,25 +105,18 @@ class AnatomySolver(Solver):
     def resolve_attributes(self, data: dict, project_name: str = None):
         # studio default settings
         studio_attrs = repo.get_file_content("project-settings.yml", default={})
-
         # project settings
         if project_name:
-            project_attrs = (
-                repo.get_file_content(
-                    Path("projects", project_name, "project-settings.yml").as_posix(),
-                    default={},
-                )
-                if project_name
-                else {}
+            project_attrs = repo.get_file_content(
+                f"projects/{project_name}/project-settings.yml", default={}
             )
             studio_attrs = studio_attrs | project_attrs
-
+        # reformat data
         resolution: str | None = studio_attrs.pop("resolution", None)
         if resolution:
-            h, w = resolution.split("x")
-            studio_attrs["resolutionWidth"], studio_attrs["resolutionHeight"] = int(
-                h
-            ), int(w)
+            w, h = resolution.split("x")
+            studio_attrs["resolutionWidth"] = int(w)
+            studio_attrs["resolutionHeight"] = int(h)
 
         for key in ["startDate", "endDate", "description"]:
             if key in studio_attrs:
