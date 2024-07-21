@@ -7,31 +7,33 @@ from ayon_tools.repository import repo
 class ApplicationsAddon(Addon):
 
     def solve_shortcuts(self, settings: dict, project: str = None):
-        apps_settings = repo.get_file_content(
+        shortcut_apps = repo.get_file_content(
             "applications.yml", branch=self.studio.name, default=None
         )
-        if not apps_settings:
+        if not shortcut_apps:
             return settings
-
+        shortcut_apps = {app["name"]: app for app in shortcut_apps}
         # resolve app list
-        enabled_apps = []
-        for app in apps_settings:
-            api_settings = self.update_dictionary(
-                app, settings["applications"][app.get("name")]
-            )
-            app_name = api_settings.pop("name")
-            enabled_apps.append(app_name)
-            settings["applications"][app_name] = api_settings
-        # disable not defined apps
-        for app_name in list(settings["applications"].keys()):
-            if app_name not in enabled_apps:
-                if isinstance(settings["applications"][app_name], dict):
-                    settings["applications"][app_name]["enable"] = False
+        for app_name, app_data in settings["applications"].items():
+            if not isinstance(app_data, dict):
+                continue
+            if app_name in shortcut_apps:
+                updated_data = self.convert_shortcut_app_to_settings_app(
+                    app_data, shortcut_apps[app_name]
+                )
+                updated_data["enabled"] = True
+                settings["applications"][app_name] = updated_data
+            else:
+                settings["applications"][app_name]["enabled"] = False
         return settings
 
-    def convert_shortcut_app_to_settings_app(self, shortcut_app: dict, default_app: dict or None):
+    def convert_shortcut_app_to_settings_app(
+        self,
+        settings_app: dict,
+        shortcut_app: dict,
+    ):
         """
-        SOURCE DATA ==================================
+        shortcut_app ==================================
 
         - name: maya
           label: Maya
@@ -39,7 +41,7 @@ class ApplicationsAddon(Addon):
             - name: 2024
             - name: 2025
 
-        TARGET DATA ==================================
+        settings_app ==================================
         {
           "name": "maya",   // will removed later
           "enabled": true,
@@ -89,41 +91,51 @@ class ApplicationsAddon(Addon):
           ]
         },
         """
-        supported_apps = repo.get_file_content("defaults/bundle.json", branch=self.studio.name)
-        if shortcut_app["name"] not in supported_apps["addons"]:
-            raise Exception(f"Unsupported application name: '{shortcut_app['name']}'")
+        from pprint import pprint
 
-        settings_addon = self.update_dictionary(default_app, shortcut_app)
+        # TODO resolve shortcut to settings
+
         # settings_addon["env"] = json.dumps(settings_addon["env"])
-        self.on_app_resolved(settings_addon)
-        print(settings_addon)
-        return settings_addon
+        self.on_app_resolved(settings_app)
+        return settings_app
 
     def on_app_resolved(self, settings):
         pass
 
     def update_dictionary(self, existing_dict, new_data):
-        from pprint import pprint
-        pprint(new_data)
         app_name = new_data.get("host_name") or new_data.get("name")
         if app_name in existing_dict:
             app_info = existing_dict[app_name]
 
             app_info["enabled"] = new_data.get("enabled", app_info.get("enabled", True))
             app_info["label"] = new_data.get("label", app_info.get("label", app_name))
-            app_info["host_name"] = new_data.get("host_name", app_info.get("host_name", app_name))
+            app_info["host_name"] = new_data.get(
+                "host_name", app_info.get("host_name", app_name)
+            )
             app_info["icon"] = new_data.get("icon", app_info.get("icon", ""))
-            app_info["environment"] = new_data.get("environment", app_info.get("environment", "{}"))
+            app_info["environment"] = new_data.get(
+                "environment", app_info.get("environment", "{}")
+            )
 
             new_variants = new_data.get("variants") or new_data.get("versions", [])
             if new_variants:
                 app_info["variants"] = []
                 for new_variant in new_variants:
-                    variant_name = new_variant if isinstance(new_variant, str) else new_variant.get("name")
+                    variant_name = (
+                        new_variant
+                        if isinstance(new_variant, str)
+                        else new_variant.get("name")
+                    )
 
                     # Ищем существующий вариант с таким же именем
                     existing_variant = next(
-                        (v for v in existing_dict[app_name].get("variants", []) if v["name"] == variant_name), None)
+                        (
+                            v
+                            for v in existing_dict[app_name].get("variants", [])
+                            if v["name"] == variant_name
+                        ),
+                        None,
+                    )
 
                     if existing_variant:
                         # Если вариант существует, используем его данные
@@ -136,7 +148,7 @@ class ApplicationsAddon(Addon):
                             "environment": "{}",
                             "use_python_2": False,
                             "executables": {"windows": [], "linux": [], "darwin": []},
-                            "arguments": {"windows": [], "linux": [], "darwin": []}
+                            "arguments": {"windows": [], "linux": [], "darwin": []},
                         }
 
                     # Обновляем данные варианта, если они предоставлены в new_data
