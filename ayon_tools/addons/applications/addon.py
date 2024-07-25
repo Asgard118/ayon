@@ -1,7 +1,9 @@
 import json
+import logging
 
 from ayon_tools.base_addon import Addon
 from ayon_tools.repository import repo
+from .variants import get_variant_class
 
 
 class ApplicationsAddon(Addon):
@@ -38,8 +40,8 @@ class ApplicationsAddon(Addon):
         - name: maya
           label: Maya
           versions:
-            - name: 2024
-            - name: 2025
+            - 2024
+            - 2025
 
         settings_app ==================================
         {
@@ -91,11 +93,24 @@ class ApplicationsAddon(Addon):
           ]
         },
         """
-        from pprint import pprint
-
-        # TODO resolve shortcut to settings
-
-        # settings_addon["env"] = json.dumps(settings_addon["env"])
+        assert settings_app["name"] == shortcut_app["name"], "App name mismatch"
+        # label
+        if "label" in shortcut_app:
+            settings_app["label"] = shortcut_app["label"]
+        # envs
+        if "environment" in shortcut_app:
+            current_env = settings_app["environment"]
+            current_env.update(shortcut_app["environment"])
+            settings_app["environment"] = json.dumps(current_env)
+        # variants
+        variant_class = get_variant_class(settings_app["name"])
+        if not variant_class:
+            logging.error(f"Variant class not found for {settings_app['name']}")
+            # raise Exception(f"Variant class not found for {settings_app['name']}")
+        else:
+            for variant_data in shortcut_app.get("versions", []):
+                variant = variant_class(variant_data)
+                settings_app["variants"].append(variant.get_config())
         self.on_app_resolved(settings_app)
         return settings_app
 
