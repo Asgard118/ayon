@@ -98,10 +98,10 @@ class ApplicationsAddon(Addon):
         if "label" in shortcut_app:
             settings_app["label"] = shortcut_app["label"]
         # envs
+        current_env = settings_app["environment"]
         if "environment" in shortcut_app:
-            current_env = settings_app["environment"]
             current_env.update(shortcut_app["environment"])
-            settings_app["environment"] = json.dumps(current_env)
+        settings_app["environment"] = json.dumps(current_env)
         # variants
         variant_class = get_variant_class(settings_app["name"])
         if not variant_class:
@@ -111,6 +111,7 @@ class ApplicationsAddon(Addon):
             for variant_data in shortcut_app.get("versions", []):
                 variant = variant_class(variant_data)
                 settings_app["variants"].append(variant.get_config())
+        # callback
         self.on_app_resolved(settings_app)
         return settings_app
 
