@@ -118,65 +118,6 @@ class ApplicationsAddon(Addon):
     def on_app_resolved(self, settings):
         pass
 
-    def update_dictionary(self, existing_dict, new_data):
-        app_name = new_data.get("host_name") or new_data.get("name")
-        if app_name in existing_dict:
-            app_info = existing_dict[app_name]
-
-            app_info["enabled"] = new_data.get("enabled", app_info.get("enabled", True))
-            app_info["label"] = new_data.get("label", app_info.get("label", app_name))
-            app_info["host_name"] = new_data.get(
-                "host_name", app_info.get("host_name", app_name)
-            )
-            app_info["icon"] = new_data.get("icon", app_info.get("icon", ""))
-            app_info["environment"] = new_data.get(
-                "environment", app_info.get("environment", "{}")
-            )
-
-            new_variants = new_data.get("variants") or new_data.get("versions", [])
-            if new_variants:
-                app_info["variants"] = []
-                for new_variant in new_variants:
-                    variant_name = (
-                        new_variant
-                        if isinstance(new_variant, str)
-                        else new_variant.get("name")
-                    )
-
-                    # Ищем существующий вариант с таким же именем
-                    existing_variant = next(
-                        (
-                            v
-                            for v in existing_dict[app_name].get("variants", [])
-                            if v["name"] == variant_name
-                        ),
-                        None,
-                    )
-
-                    if existing_variant:
-                        # Если вариант существует, используем его данные
-                        updated_variant = existing_variant.copy()
-                    else:
-                        # Если вариант не существует, создаем новый с дефолтными значениями
-                        updated_variant = {
-                            "name": variant_name,
-                            "label": variant_name,
-                            "environment": "{}",
-                            "use_python_2": False,
-                            "executables": {"windows": [], "linux": [], "darwin": []},
-                            "arguments": {"windows": [], "linux": [], "darwin": []},
-                        }
-
-                    # Обновляем данные варианта, если они предоставлены в new_data
-                    if isinstance(new_variant, dict):
-                        updated_variant.update(new_variant)
-
-                    app_info["variants"].append(updated_variant)
-        else:
-            existing_dict[app_name] = new_data
-
-        return existing_dict
-
     def get_app_list_attributes(self, project_name: str = None):
         """
         Example:
