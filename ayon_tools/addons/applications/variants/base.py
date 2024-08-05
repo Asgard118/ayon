@@ -13,9 +13,9 @@ class AppVariant:
     default_darwin_path = None
 
     def __init__(self, shortcut_data: dict):
+        self.shortcut_data = shortcut_data
         self.variant_name = shortcut_data["name"]
         self.variant_label = shortcut_data.get("label", self.variant_name)
-        self.shortcut_data = shortcut_data
 
     @staticmethod
     def _safe_format(value, **kwargs):
