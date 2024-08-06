@@ -14,11 +14,11 @@ class AnatomySolver(Solver):
 
     def resolve_shortcuts(self, default_data, project_name: str = None):
         # templates
-        self.resolve_templates(default_data, project_name)
-        self.resolve_folders(default_data, project_name)
-        self.resolve_tasks(default_data, project_name)
-        self.resolve_attributes(default_data, project_name)
-        return default_data
+        data = self.resolve_templates(default_data, project_name)
+        data = self.resolve_folders(data, project_name)
+        data = self.resolve_tasks(data, project_name)
+        data = self.resolve_attributes(data, project_name)
+        return data
 
     def resolve_templates(self, data: dict, project_name: str = None):
         project_data = (
@@ -59,6 +59,7 @@ class AnatomySolver(Solver):
         if variables:
             data.setdefault("templates", {})
             data["templates"].update(variables)
+        return data
 
     def resolve_folders(self, data: dict, project_name: str = None):
         project_folders = repo.get_file_content(
@@ -121,12 +122,15 @@ class AnatomySolver(Solver):
         for key in ["startDate", "endDate", "description"]:
             if key in studio_attrs:
                 del studio_attrs[key]
+
+        # apply attrs
+        data["attributes"].update(studio_attrs)
+
         # applications
         app_addon = self.studio.get_addon("applications")
         app_list = app_addon.get_app_list_attributes()
         data["attributes"]["applications"] = app_list
-        # apply attrs
-        data["attributes"].update(studio_attrs)
 
         # fix types
         data["attributes"]["fps"] = float(data["attributes"]["fps"])
+        return data

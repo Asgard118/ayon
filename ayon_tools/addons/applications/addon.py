@@ -3,7 +3,7 @@ import logging
 
 from ayon_tools.base_addon import Addon
 from ayon_tools.repository import repo
-from .variants import get_variant_class
+from ayon_tools.addons.applications.variants import get_variant_class
 
 
 class ApplicationsAddon(Addon):
@@ -93,7 +93,7 @@ class ApplicationsAddon(Addon):
           ]
         },
         """
-        assert settings_app["name"] == shortcut_app["name"], "App name mismatch"
+        assert settings_app["host_name"] == shortcut_app["name"], "App name mismatch"
         # label
         if "label" in shortcut_app:
             settings_app["label"] = shortcut_app["label"]
@@ -103,9 +103,9 @@ class ApplicationsAddon(Addon):
             current_env.update(shortcut_app["environment"])
         settings_app["environment"] = json.dumps(current_env)
         # variants
-        variant_class = get_variant_class(settings_app["name"])
+        variant_class = get_variant_class(shortcut_app["name"])
         if not variant_class:
-            logging.error(f"Variant class not found for {settings_app['name']}")
+            logging.error(f"Variant class not found for {shortcut_app['name']}")
             # raise Exception(f"Variant class not found for {settings_app['name']}")
         else:
             for variant_data in shortcut_app.get("versions", []):
@@ -148,10 +148,10 @@ class ApplicationsAddon(Addon):
             if app_name not in all_apps:
                 raise NameError(f"Application '{app_name}' not found in repository")
             for version in versions:
-                all_variants = {
-                    var["label"]: var["name"] for var in all_apps[app_name]["variants"]
-                }
                 version = str(version)
+                all_variants = {
+                    str(var["label"]): str(var["name"]) for var in all_apps[app_name]["variants"]
+                }
                 if version not in all_variants:
                     raise NameError(
                         f"App Version '{app_name}/{version}' not found in registered application: {list(all_variants.keys())}"

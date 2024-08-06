@@ -15,5 +15,5 @@ def get_variant_class(name):
                 and issubclass(obj, AppVariant)
                 and obj != AppVariant
             ):
-                if obj.__name__ == name:
+                if obj.app_name == name:
                     return obj

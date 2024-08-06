@@ -36,7 +36,7 @@ class StudioSettings:
     # SERVER ##################################################################
 
     def get_server_addons_settings(self):
-        return api.addons.get_addon_studio_settings(auth=self.auth)
+        return api.addons.get_addons_settings(auth=self.auth)
 
     def get_projects(self):
         return api.projects.get_projects(auth=self.auth)
