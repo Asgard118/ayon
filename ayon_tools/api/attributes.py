@@ -139,7 +139,6 @@ def check_attr_scope(scope: list):
     if invalid_scopes:
         raise ValueError(f"Invalid scope(s)")
 
-
 def validate_attributes(attributes: dict):
     errors = []
     for attribute in attributes:
@@ -210,3 +209,6 @@ def merge_attributes(original_attr: dict, new_attr: dict):
         attr["position"] = max_pos + i
         with_position.append(attr)
     return {"attributes": with_position}
+
+def update_attributes_config(*args, **kwargs):
+    ayon_api.set_attribute_config(*args, **kwargs)

@@ -178,6 +178,9 @@ class StudioSettings:
         for attr, data in attributes.items():
             api.attributes.set_attributes(attr, data, auth=self.auth)
 
+    def set_attributes_config(self, *args, **kwargs):
+        api.attributes.update_attributes_config(*args, **kwargs)
+
     def set_all_attributes(self, data: dict):
         api.attributes.set_all_attributes(data, auth=self.auth)
 

@@ -65,7 +65,20 @@ def run(
                 merged_attributes = merge_attributes(server_attributes, repo_attributes)
                 logging.info("Attributes is missmatch")
                 if not fake_apply:
-                    studio.set_all_attributes(merged_attributes)
+                    from pprint import pprint
+                    for attribute in merged_attributes['attributes']:
+                        attribute_name = attribute.get('name')
+                        data = attribute.get('data')
+                        scope = attribute.get('scope')
+                        position = attribute.get('position')
+                        builtin = attribute.get('builtin')
+                        studio.set_attributes_config(
+                            attribute_name=attribute_name,
+                            data=data,
+                            scope=scope,
+                            position=position,
+                            builtin=builtin
+                        )
                 logging.info("Attributes was applied")
             else:
                 logging.info("Attributes is OK")
