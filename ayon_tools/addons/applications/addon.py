@@ -21,7 +21,7 @@ class ApplicationsAddon(Addon):
                 continue
             if app_name in shortcut_apps:
                 updated_data = self.convert_shortcut_app_to_settings_app(
-                    app_data, shortcut_apps[app_name]
+                    app_name, app_data, shortcut_apps[app_name]
                 )
                 updated_data["enabled"] = True
                 settings["applications"][app_name] = updated_data
@@ -31,6 +31,7 @@ class ApplicationsAddon(Addon):
 
     def convert_shortcut_app_to_settings_app(
         self,
+        app_name: str,
         settings_app: dict,
         shortcut_app: dict,
     ):
@@ -93,7 +94,9 @@ class ApplicationsAddon(Addon):
           ]
         },
         """
-        assert settings_app["host_name"] == shortcut_app["name"], "App name mismatch"
+        assert (
+            app_name == shortcut_app["name"]
+        ), f"App name mismatch: {settings_app['host_name']} != {shortcut_app['name']}"
         # label
         if "label" in shortcut_app:
             settings_app["label"] = shortcut_app["label"]
@@ -150,7 +153,8 @@ class ApplicationsAddon(Addon):
             for version in versions:
                 version = str(version)
                 all_variants = {
-                    str(var["label"]): str(var["name"]) for var in all_apps[app_name]["variants"]
+                    str(var["label"]): str(var["name"])
+                    for var in all_apps[app_name]["variants"]
                 }
                 if version not in all_variants:
                     raise NameError(
