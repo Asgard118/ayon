@@ -8,6 +8,7 @@ class _SafeDict(dict):
 
 class AppVariant:
     app_name = None
+    app_label = None
     default_windows_path = None
     default_linux_path = None
     default_darwin_path = None
@@ -17,7 +18,9 @@ class AppVariant:
             shortcut_data = {"name": str(shortcut_data)}
         self.shortcut_data = shortcut_data
         self.variant_name = shortcut_data["name"]
-        self.variant_label = shortcut_data.get("label", self.variant_name)
+        self.variant_label = (
+            shortcut_data.get("label") or self.app_label or self.variant_name.title()
+        )
 
     @staticmethod
     def _safe_format(value, **kwargs):

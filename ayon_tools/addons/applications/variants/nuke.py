@@ -17,6 +17,7 @@ class NukeVariant(AppVariant):
 
 class NukeXVariant(NukeVariant):
     app_name = "nukex"
+    app_label = "NukeX"
     default_darwin_path = "/Applications/Nuke{label}/NukeX{label}.app"
 
     def get_default_arguments(self):
@@ -29,6 +30,7 @@ class NukeXVariant(NukeVariant):
 
 class NukeStudioVariant(NukeVariant):
     app_name = "nukestudio"
+    app_label = "NukeStudio"
     default_darwin_path = "/Applications/Nuke{label}/NukeStudio{label}.app"
 
     def get_default_arguments(self):
@@ -41,6 +43,7 @@ class NukeStudioVariant(NukeVariant):
 
 class NukeAssistVariant(NukeVariant):
     app_name = "nukeassist"
+    app_label = "NukeAssist"
     default_darwin_path = "/Applications/Nuke{label}/NukeAssist{label}.app"
 
     def get_default_arguments(self):
