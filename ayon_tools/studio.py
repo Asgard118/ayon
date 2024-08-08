@@ -1,7 +1,14 @@
 import logging
+
+import ayon_api
+
+import re
+
 from . import api
 from . import config
 from .repository import repo
+from .api import system
+
 
 
 class StudioSettings:
@@ -17,6 +24,13 @@ class StudioSettings:
         self.name = name
         studio_config = self.get_config_data()
         self.auth = api.auth.Auth(**studio_config)
+        self.server_info = self.get_server_version()
+
+
+    def get_server_version(self):
+        server_info = system.get_server_info()
+        server_version = re.split(r'\+', server_info)[0]
+        return server_version
 
     def __str__(self):
         return f'StudioSettings("{self.name}")'
@@ -368,7 +382,7 @@ class StudioSettings:
         )
         logging.debug(f"Importing default module {default_module}")
         module = import_module_from_dotted_path(default_module)
-        cls = get_subclass_from_module(module, Solver)
+        cls = next(get_subclass_from_module(module, Solver), None)
         if cls:
             logging.debug("Using default shortcut solver class from main package")
             return cls
