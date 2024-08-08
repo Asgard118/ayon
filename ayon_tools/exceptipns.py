@@ -1,6 +1,14 @@
-class RepositoryDataError(Exception):
+class AyonToolError(Exception):
     pass
 
 
-class ServerDataError(Exception):
+class RepositoryDataError(AyonToolError):
+    pass
+
+
+class ServerDataError(AyonToolError):
+    pass
+
+
+class GitError(AyonToolError):
     pass
