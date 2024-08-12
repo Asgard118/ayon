@@ -21,11 +21,15 @@ class Addon:
         self.kwargs = kwargs
 
     def get_default_settings(self, addon_ver: str):
-        return server_addon_tools.get_addon_default_settings(self.name, self.studio, addon_ver)
+        return server_addon_tools.get_addon_default_settings(
+            self.name, self.studio, addon_ver
+        )
 
     def get_repo_settings(self, project=None):
         # get default
-        settings = self.get_default_settings(self.studio.name)
+        bundle = self.studio.get_rep_bundle()
+        version = bundle["addons"][self.name]
+        settings = self.get_default_settings(version)
         # resolve shortcuts
         settings = self.solve_shortcuts(settings, project)
         return settings
@@ -113,11 +117,13 @@ class Addon:
         return addon_class(addon_name, studio, **kwargs)
 
     def get_addon_info(self) -> dict:
-        info = repo.get_file_content(f'addons/{self.name}/info.yml', branch=self.studio.name)
-        assert info['name'] == self.name
+        info = repo.get_file_content(
+            f"addons/{self.name}/info.yml", branch=self.studio.name
+        )
+        assert info["name"] == self.name
         return info
 
     def get_repository_url(self) -> str:
-        return self.get_addon_info()['url']
+        return self.get_addon_info()["url"]
 
     def build(self) -> str: ...
