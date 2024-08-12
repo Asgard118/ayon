@@ -14,14 +14,17 @@ def get_studio_settings(auth: Auth = default_auth) -> dict:
 
 
 def get_addon_studio_settings(name: str, ver: str, auth: Auth = default_auth):
+    """
+    Возвращает студийные настройки конкретного аддона указанной версии
+    """
     with auth:
-        data = ayon_api.get_addon_studio_settings(name, ver)
-    return data
+        return ayon_api.get_addon_studio_settings(name, ver)
+
 
 def get_addons_settings(auth: Auth = default_auth):
     with auth:
-        data = ayon_api.get_addons_studio_settings()
-    return data
+        return ayon_api.get_addons_studio_settings()
+
 
 def set_studio_settings(
     addon_name: str, version: str, settings: dict, auth: Auth = default_auth
