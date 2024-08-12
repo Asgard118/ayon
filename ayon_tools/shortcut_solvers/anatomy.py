@@ -48,9 +48,8 @@ class AnatomySolver(Solver):
                 for template_name, template_data in tmpl_data.get(
                     template_type, {}
                 ).items():
-                    templates_data[template_type].append(
-                        dict(name=template_name, **template_data)
-                    )
+                    template_data["name"] = template_name
+                    templates_data[template_type].append(template_data)
         data["templates"] = templates_data
         for other_template in ("delivery", "staging", "others"):
             data["templates"].setdefault(other_template, [])
@@ -122,7 +121,8 @@ class AnatomySolver(Solver):
         for key in ["startDate", "endDate", "description"]:
             if key in studio_attrs:
                 del studio_attrs[key]
-
+        data["attributes"]["handleStart"] = studio_attrs.pop("handle_start", 0)
+        data["attributes"]["handleEnd"] = studio_attrs.pop("handle_end", 0)
         # apply attrs
         data["attributes"].update(studio_attrs)
 
@@ -132,5 +132,5 @@ class AnatomySolver(Solver):
         data["attributes"]["applications"] = app_list
 
         # fix types
-        data["attributes"]["fps"] = float(data["attributes"]["fps"])
+        data["attributes"]["fps"] = float(data["attributes"].get("fps", 25))
         return data
