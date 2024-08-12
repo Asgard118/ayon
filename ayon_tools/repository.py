@@ -76,6 +76,8 @@ class Repository:
         branch = branch or self.default_branch
         logging.debug(f"Getting file {branch}:{file_name}")
         if self.read_from_current_files:
+            if not self.workdir.exists():
+                self.reload()
             data = self.read_from_file(file_name, default)
         else:
             data = self.read_from_repo(file_name, branch, default)
