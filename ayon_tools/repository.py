@@ -62,7 +62,12 @@ class Repository:
             logging.info(f"Already on branch {branch_name}")
 
     def set_tag(self, tag_name: str):
-        commit = self.repo.lookup_reference(f"refs/tags/{tag_name}").peel(pygit2.Commit)
+        try:
+            commit = self.repo.lookup_reference(f"refs/tags/{tag_name}").peel(
+                pygit2.Commit
+            )
+        except KeyError as e:
+            raise ValueError(f"Tag '{tag_name}' not found in {self.workdir}") from e
         self.repo.checkout_tree(commit, strategy=pygit2.GIT_CHECKOUT_FORCE)
         self.repo.head.set_target(commit.id)
         return commit.id
