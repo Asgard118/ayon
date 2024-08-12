@@ -6,7 +6,7 @@ import re
 
 from . import api
 from . import config
-from .repository import repo
+from .repository import repo, Repository
 from .api import system
 
 
@@ -24,8 +24,14 @@ class StudioSettings:
         self.name = name
         studio_config = self.get_config_data()
         self.auth = api.auth.Auth(**studio_config)
-        self.server_info = self.get_server_version()
+        self.server_version = self.get_server_version()
+        self.init_backend_repo(version=self.server_version)
 
+    def init_backend_repo(self, version):
+        backend_url = config.BACKEND_URL
+        server_version = Repository(backend_url)
+        server_version.reload()
+        server_version.set_tag(version)
 
     def get_server_version(self):
         server_info = system.get_server_info()
