@@ -10,7 +10,6 @@ from .repository import repo
 from .api import system
 
 
-
 class StudioSettings:
     bundle_config_file = "bundle.yml"
     anatomy_config_file = "defaults/anatomy.json"
@@ -24,13 +23,13 @@ class StudioSettings:
         self.name = name
         studio_config = self.get_config_data()
         self.auth = api.auth.Auth(**studio_config)
-        self.server_info = self.get_server_version()
+        self.server_version = self.get_server_version()
 
-
-    def get_server_version(self):
-        server_info = system.get_server_info()
-        server_version = re.split(r'\+', server_info)[0]
-        return server_version
+    def get_server_version(self, full=False):
+        version = system.get_server_version(self.auth)
+        if full:
+            return ".".join(map(str, version))
+        return ".".join(map(str, version[:3]))
 
     def __str__(self):
         return f'StudioSettings("{self.name}")'
