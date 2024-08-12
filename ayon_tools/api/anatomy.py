@@ -1,3 +1,5 @@
+import logging
+
 import ayon_api
 from .auth import default_auth, Auth
 import requests
@@ -88,6 +90,14 @@ def set_project_anatomy(project_name: str, anatomy: dict, auth: Auth = default_a
         headers=auth.HEADERS,
         json=anatomy,
     )
+
+    if not response.ok:
+        try:
+            resp_data = response.json()
+            logging.error(resp_data.get("detail", "Unknown"))
+        except Exception:
+            resp_data = response.text
+            logging.error(resp_data)
     response.raise_for_status()
 
 
