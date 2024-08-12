@@ -19,6 +19,7 @@ def load_config():
 conf = load_config()
 REPOSITORY_DIR = WORKDIR / "repository"
 REPOSITORY_URL = conf.get("configs_repository_url")
+BACKEND_URL = conf.get("ayon_backend_repository_url")
 STUDIO_CONFIG_DIR = Path(conf.get("studio_config_files_dir") or WORKDIR / "studios")
 
 

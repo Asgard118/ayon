@@ -17,7 +17,7 @@ class AppVariant:
         if isinstance(shortcut_data, (int, str)):
             shortcut_data = {"name": str(shortcut_data)}
         self.shortcut_data = shortcut_data
-        self.variant_name = shortcut_data["name"]
+        self.variant_name = str(shortcut_data["name"])
         self.variant_label = (
             shortcut_data.get("label") or self.app_label or self.variant_name.title()
         )

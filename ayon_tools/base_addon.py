@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from pathlib import Path
 from ayon_tools.repository import repo
 import ayon_tools
+from ayon_tools.utils import server_addon_tools
 
 if TYPE_CHECKING:
     from ayon_tools.studio import StudioSettings
@@ -19,9 +20,8 @@ class Addon:
         self.studio = studio
         self.kwargs = kwargs
 
-    def get_default_settings(self, studio_name: str):
-        default_settings_path = Path("addons", self.name, "defaults.json").as_posix()
-        return repo.get_file_content(default_settings_path, studio_name)
+    def get_default_settings(self, addon_ver: str):
+        return server_addon_tools.get_addon_default_settings(self.name, self.studio, addon_ver)
 
     def get_repo_settings(self, project=None):
         # get default
@@ -111,5 +111,13 @@ class Addon:
     def get_addon_instance(cls, addon_name: str, studio: StudioSettings, **kwargs):
         addon_class = cls.get_addon_class(addon_name, studio)
         return addon_class(addon_name, studio, **kwargs)
+
+    def get_addon_info(self) -> dict:
+        info = repo.get_file_content(f'addons/{self.name}/info.yml', branch=self.studio.name)
+        assert info['name'] == self.name
+        return info
+
+    def get_repository_url(self) -> str:
+        return self.get_addon_info()['url']
 
     def build(self) -> str: ...
