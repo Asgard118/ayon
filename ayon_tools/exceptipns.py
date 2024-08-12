@@ -12,3 +12,11 @@ class ServerDataError(AyonToolError):
 
 class GitError(AyonToolError):
     pass
+
+
+class AnatomyUpdateError(AyonToolError):
+    pass
+
+
+class AnatomyConflictError(AnatomyUpdateError):
+    pass
