@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import ayon_api
 
@@ -31,6 +32,11 @@ class StudioSettings:
         server_version = Repository(backend_url)
         server_version.reload()
         server_version.set_tag(version)
+        if not server_version.workdir.exists():
+            raise Exception("Backend repository not initialized")
+        pypath = server_version.workdir.as_posix()
+        if pypath not in sys.path:
+            sys.path.append(pypath)
 
     def get_server_version(self, full=False):
         version = system.get_server_version(self.auth)
