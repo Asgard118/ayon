@@ -1,8 +1,11 @@
+import json
 import logging
 
 import ayon_api
 from .auth import default_auth, Auth
 import requests
+
+from ..exceptipns import AnatomyConflictError, AnatomyUpdateError
 
 
 # studio presets
@@ -93,12 +96,15 @@ def set_project_anatomy(project_name: str, anatomy: dict, auth: Auth = default_a
 
     if not response.ok:
         try:
-            resp_data = response.json()
-            logging.error(resp_data.get("detail", "Unknown"))
-        except Exception:
-            resp_data = response.text
-            logging.error(resp_data)
-    response.raise_for_status()
+            detail = response.json().get("detail", "Unknown error")
+        except json.JSONDecodeError:
+            detail = response.text
+        if 'is still referenced from table' in detail:
+            raise AnatomyConflictError(detail)
+        elif '' in detail:
+            ...
+        raise AnatomyUpdateError(detail)
+
 
 
 def set_primary_preset(preset_name: str, auth: Auth = default_auth):
