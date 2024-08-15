@@ -1,5 +1,7 @@
 import logging
 import os
+import tempfile
+
 import click
 
 
@@ -66,8 +68,13 @@ def apply(ctx, studio, project, operations):
     ayon_tools --stage apply studio_name -p project1 --project project2
     """
     from .commands import apply
-
-    apply.run(studio, projects=project, operations=operations, **ctx.parent.params)
+    from .commands import backup_restore
+    backup_path = backup_restore.dump(studio, project, tempfile.mktemp(suffix='.json'))
+    try:
+        apply.run(studio, projects=project, operations=operations, **ctx.parent.params)
+    except Exception as e:
+        logging.error(str(e))
+        backup_restore.restore(studio, backup_path)
 
 
 @cli.command()
