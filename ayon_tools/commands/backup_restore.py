@@ -46,8 +46,3 @@ def restore(studio: StudioSettings, data: dict):
     #anatomy
     preset_name = studio.get_default_anatomy_preset_name()
     studio.update_anatomy_preset(preset_name, data["anatomy"])
-
-s = StudioSettings('main')
-a = s.get_projects()
-for b in a:
-    print(b['name'])
