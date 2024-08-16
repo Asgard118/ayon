@@ -19,7 +19,6 @@ def dump(studio: StudioSettings, path: str = None, **kwargs):
         server_staging_bundle=studio.get_staging_bundle(),
         server_production_bundle=studio.get_productions_bundle(),
         server_addons=studio.get_server_addons_settings(),
-        projects={},
     )
     # projects data
     projects = studio.get_projects()
@@ -27,6 +26,8 @@ def dump(studio: StudioSettings, path: str = None, **kwargs):
         data["projects"][project["name"]] = dict(
             anatomy=studio.get_project_anatomy(project["name"]),
             settings=studio.get_project_addons_settings(project["name"]),
+            projects_settings_staging=studio.get_project_settings_for_status("staging", project["name"]),
+            projects_settings_production=studio.get_project_settings_for_status("production", project["name"])
         )
     with open(path, "w") as file:
         json.dump(data, file, indent=4, ensure_ascii=False)

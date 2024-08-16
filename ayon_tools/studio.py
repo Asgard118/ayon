@@ -237,6 +237,9 @@ class StudioSettings:
 
     # project configs
 
+    def get_project_settings_for_status(self, status:str, project:str):
+        return api.projects.get_project_settings(status, project, auth=self.auth)
+
     def get_project_anatomy(self, project_name: str):
         return api.anatomy.get_project_anatomy(project_name, auth=self.auth)
 
