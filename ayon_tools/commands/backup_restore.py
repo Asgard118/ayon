@@ -1,6 +1,7 @@
 import json
 
 from ayon_tools.studio import StudioSettings
+from pathlib import Path
 
 def save_data_to_json_file(data_dict: dict, filename: str):
     try:
@@ -13,6 +14,10 @@ def save_data_to_json_file(data_dict: dict, filename: str):
         json.dump(file_data, f, indent=4, ensure_ascii=False)
 
 def dump(studio: StudioSettings, path: str):
+    true_path = Path(path)
+    if not true_path.parent.exists():
+        true_path.parent.mkdir(parents=True, exist_ok=True)
+
     server_anatomy = studio.get_default_anatomy_preset()
     server_attributes = studio.get_attributes()
     server_staging_bundle = studio.get_staging_bundle()

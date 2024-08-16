@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import tempfile
 
 import click
@@ -69,7 +70,7 @@ def apply(ctx, studio, project, operations):
     """
     from .commands import apply
     from .commands import backup_restore
-    backup_path = backup_restore.dump(studio, project, tempfile.mktemp(suffix='.json'))
+    backup_path = backup_restore.dump(studio, tempfile.mktemp(suffix='.json'))
     try:
         apply.run(studio, projects=project, operations=operations, **ctx.parent.params)
     except Exception as e:
@@ -96,6 +97,23 @@ def check(studio):
         f'Check differences between local and remote settings for studio "{studio}"'
     )
 
+@cli.command()
+@click.argument("studio", type=str, required=True)
+@click.option(
+    "-path",
+    type=str,
+    default='_temp/backup.json',
+    help="Path to backup"
+)
+@click.pass_context
+def dump(studio, path):
+    from .commands import backup_restore
+    try:
+        backup_restore.dump(studio, path)
+        print(f"save backup in: {path}")
+    except Exception:
+        logging.exception("Bump Failed")
+        sys.exit(1)
 
 if __name__ == "__main__":
     cli()
