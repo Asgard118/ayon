@@ -70,7 +70,8 @@ def apply(ctx, studio, project, operations):
     """
     from .commands import apply
     from .commands import backup_restore
-    backup_path = backup_restore.dump(studio, tempfile.mktemp(suffix='.json'))
+
+    backup_path = backup_restore.dump(studio, tempfile.mktemp(suffix=".json"))
     try:
         apply.run(studio, projects=project, operations=operations, **ctx.parent.params)
     except Exception as e:
@@ -97,18 +98,14 @@ def check(studio):
         f'Check differences between local and remote settings for studio "{studio}"'
     )
 
+
 @cli.command()
 @click.argument("studio", type=str, required=True)
-@click.option(
-    "-p",
-    "--path",
-    type=str,
-    default='_temp/backup.json',
-    help="Path to backup"
-)
+@click.option("-p", "--path", type=str, default=None, help="Path to backup")
 @click.pass_context
 def dump(ctx, studio, path):
     from .commands import backup_restore
+
     try:
         backup_restore.dump(studio, path, **ctx.parent.params)
         print(f"save backup in: {path}")
@@ -116,17 +113,20 @@ def dump(ctx, studio, path):
         logging.exception("Bump Failed")
         sys.exit(1)
 
+
 @cli.command()
 @click.argument("studio", type=str, required=True)
 @click.argument("backup_path", type=str, required=True)
 @click.pass_context
 def restore(ctx, studio, backup_path):
     from .commands import backup_restore
+
     try:
         backup_restore.restore(studio, backup_path, **ctx.parent.params)
     except Exception:
         logging.exception("Restore Failed")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     cli()
