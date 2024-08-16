@@ -13,7 +13,11 @@ def save_data_to_json_file(data_dict: dict, filename: str):
     with open(filename, 'w') as f:
         json.dump(file_data, f, indent=4, ensure_ascii=False)
 
-def dump(studio: StudioSettings, path: str):
+def dump(studio: StudioSettings, path: str, **kwargs):
+
+    if isinstance(studio, str):
+        studio = StudioSettings(studio, **kwargs)
+
     true_path = Path(path)
     if not true_path.parent.exists():
         true_path.parent.mkdir(parents=True, exist_ok=True)
@@ -47,7 +51,16 @@ def dump(studio: StudioSettings, path: str):
     )
     return path
 
-def restore(studio: StudioSettings, data: dict):
+def restore(studio: StudioSettings, path, **kwargs):
+
+    if isinstance(studio, str):
+        studio = StudioSettings(studio, **kwargs)
+
+    with open(path, 'r') as file:
+        data = json.load(file)
     #anatomy
+    true_path = Path(path)
+    if not true_path.parent.exists():
+        raise FileNotFoundError(f"Path '{path}' does not exist.")
     preset_name = studio.get_default_anatomy_preset_name()
     studio.update_anatomy_preset(preset_name, data["anatomy"])
