@@ -1,66 +1,64 @@
 import json
+import logging
+import tempfile
 
 from ayon_tools.studio import StudioSettings
 from pathlib import Path
 
-def save_data_to_json_file(data_dict: dict, filename: str):
-    try:
-        with open(filename, 'r') as f:
-            file_data = json.load(f)
-    except FileNotFoundError:
-        file_data = {}
-    file_data.update(data_dict)
-    with open(filename, 'w') as f:
-        json.dump(file_data, f, indent=4, ensure_ascii=False)
 
-def dump(studio: StudioSettings, path: str, **kwargs):
-
+def dump(studio: StudioSettings, path: str = None, **kwargs):
     if isinstance(studio, str):
         studio = StudioSettings(studio, **kwargs)
 
-    true_path = Path(path)
-    if not true_path.parent.exists():
-        true_path.parent.mkdir(parents=True, exist_ok=True)
-
-    server_anatomy = studio.get_default_anatomy_preset()
-    server_attributes = studio.get_attributes()
-    server_staging_bundle = studio.get_staging_bundle()
-    server_production_bundle = studio.get_productions_bundle()
-    server_addons = studio.get_server_addons_settings()
+    path = Path(path or tempfile.mktemp(suffix=".json"))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # studio data
+    data = dict(
+        server_anatomy=studio.get_default_anatomy_preset(),
+        server_attributes=studio.get_attributes(),
+        server_staging_bundle=studio.get_staging_bundle(),
+        server_production_bundle=studio.get_productions_bundle(),
+        server_addons=studio.get_server_addons_settings(),
+        projects={},
+    )
+    # projects data
     projects = studio.get_projects()
     for project in projects:
-        server_anatomy_project = studio.get_project_anatomy(project['name'])
-        save_data_to_json_file(
-            {f"project_{project['name']}_anatomy": server_anatomy_project},
-            path
+        data["projects"][project["name"]] = dict(
+            anatomy=studio.get_project_anatomy(project["name"]),
+            settings=studio.get_project_addons_settings(project["name"]),
         )
-        server_addon_project = studio.get_project_addons_settings(project['name'])
-        save_data_to_json_file(
-            {f"project_{project['name']}_addons": server_addon_project},
-            path
-        )
-    save_data_to_json_file(
-        {
-            "addons": server_addons,
-            "server_production_bundle": server_production_bundle,
-            "server_staging_bundle": server_staging_bundle,
-            "attributes": server_attributes,
-            "anatomy": server_anatomy,
-        },
-        path
-    )
-    return path
+    with open(path, "w") as file:
+        json.dump(data, file, indent=4, ensure_ascii=False)
+    return path.as_posix()
 
-def restore(studio: StudioSettings, path, **kwargs):
 
+def restore(studio: StudioSettings, path: str, **kwargs):
     if isinstance(studio, str):
         studio = StudioSettings(studio, **kwargs)
-
-    with open(path, 'r') as file:
-        data = json.load(file)
-    #anatomy
-    true_path = Path(path)
-    if not true_path.parent.exists():
+    path = Path(path)
+    if not path.exists():
         raise FileNotFoundError(f"Path '{path}' does not exist.")
+    with path.open() as file:
+        data = json.load(file)
+
+    # studio anatomy
     preset_name = studio.get_default_anatomy_preset_name()
     studio.update_anatomy_preset(preset_name, data["anatomy"])
+    # attributes
+    ...
+    # bundle
+    ...
+    if data.get("projects"):
+        for project_name, project_data in data["projects"].items():
+            logging.info(f"Apply project {project_name}")
+            # project anatomy
+            studio.set_project_anatomy(project_name, project_data["anatomy"])
+            # project settings
+            for addon_name in project_data["addons"].items():
+                studio.set_project_addon_settings(
+                    project_name,
+                    addon_name,
+                    addon_version,
+                    project_data["settings"][addon_name],
+                )
