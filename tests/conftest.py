@@ -1,11 +1,24 @@
+import json
 import os
+import shutil
 from pathlib import Path
 import tempfile
 
-workdir = Path(tempfile.mkdtemp())
-conf_file = workdir / "lmsk_config_tests.yml"
+import pytest
 
-os.environ["AYON_TOOLS_WORKDIR"] = workdir.as_posix()
+workdir = Path(tempfile.mkdtemp())
+conf_file = workdir
+
+@pytest.fixture(scope="session")
+def workdir():
+    workdir.mkdir(exist_ok=True)
+    with conf_file.open("w") as f:
+        json.dump({"jey": "value"}, f)
+
+    os.environ["AYON_TOOLS_WORKDIR"] = workdir.as_posix()
+    yield workdir
+    shutil.rmtree(workdir)
+
 
 # TODO create testing config file
 
