@@ -160,6 +160,28 @@ def test_read_from_file_file_not_found(test_class_instance_without_mock):
     assert result == None
 
 #test set tag
+def test_set_tag_success(test_class_instance_without_mock):
+    repo = test_class_instance_without_mock.repo
+    index = repo.index
+    author = pygit2.Signature("Test Author", "author@example.com")
+    committer = pygit2.Signature("Test Committer", "committer@example.com")
+    tree = index.write_tree()
+    parent = repo.head.peel()
+    commit_id = repo.create_commit('HEAD', author, committer, 'Test commit for tag', tree, [parent.id])
+    tag_name = "v1.0.0"
+    repo.create_tag(tag_name, commit_id, pygit2.GIT_OBJECT_COMMIT, author, f"Tag {tag_name}")
+    result = test_class_instance_without_mock.set_tag(tag_name)
+    assert result == commit_id
+    assert repo.head.target == commit_id
+
+
+def test_set_tag_not_found(test_class_instance_without_mock):
+    with pytest.raises(ValueError) as exc_info:
+        test_class_instance_without_mock.set_tag("non_existent_tag")
+    assert "Tag 'non_existent_tag' not found" in str(exc_info.value)
+
+
+#test set branch
 def test_set_branch_success(test_class_instance_without_mock):
     repo = test_class_instance_without_mock.repo
     new_branch_name = "test_branch"
@@ -168,7 +190,9 @@ def test_set_branch_success(test_class_instance_without_mock):
     assert repo.head.shorthand == new_branch_name
     assert test_class_instance_without_mock.repo.head.shorthand == new_branch_name
 
-def test_set_tag_not_found(test_class_instance_without_mock):
-    with pytest.raises(ValueError) as exc_info:
-        test_class_instance_without_mock.set_tag("non_existent_tag")
-    assert "Tag 'non_existent_tag' not found" in str(exc_info.value)
+def test_set_branch_non_existent(test_class_instance_without_mock):
+    with pytest.raises(NameError) as exc_info:
+        test_class_instance_without_mock.set_branch("non_existent_branch")
+    assert f"Branch non_existent_branch not found in repository" in str(exc_info.value)
+    original_branch = test_class_instance_without_mock.repo.head.shorthand
+    assert test_class_instance_without_mock.repo.head.shorthand == original_branch
