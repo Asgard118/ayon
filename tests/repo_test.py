@@ -158,3 +158,17 @@ def test_read_from_file_default_value(test_class_instance_without_mock):
 def test_read_from_file_file_not_found(test_class_instance_without_mock):
     result = test_class_instance_without_mock.read_from_file("non_existing_file.txt", default=None)
     assert result == None
+
+#test set tag
+def test_set_branch_success(test_class_instance_without_mock):
+    repo = test_class_instance_without_mock.repo
+    new_branch_name = "test_branch"
+    repo.create_branch(new_branch_name, repo.head.peel())
+    test_class_instance_without_mock.set_branch(new_branch_name)
+    assert repo.head.shorthand == new_branch_name
+    assert test_class_instance_without_mock.repo.head.shorthand == new_branch_name
+
+def test_set_tag_not_found(test_class_instance_without_mock):
+    with pytest.raises(ValueError) as exc_info:
+        test_class_instance_without_mock.set_tag("non_existent_tag")
+    assert "Tag 'non_existent_tag' not found" in str(exc_info.value)
