@@ -130,5 +130,9 @@ class Repository:
             data = f.read()
         return data
 
+    @repo.setter
+    def repo(self, value):
+        self._repo = value
+
 
 repo = Repository()
