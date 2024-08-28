@@ -19,6 +19,7 @@ def dump(studio: StudioSettings, path: str = None, **kwargs):
         server_staging_bundle=studio.get_staging_bundle(),
         server_production_bundle=studio.get_productions_bundle(),
         server_addons=studio.get_server_addons_settings(),
+        projects={},
     )
     # projects data
     projects = studio.get_projects()
