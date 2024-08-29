@@ -62,21 +62,34 @@ def restore(studio: StudioSettings, path: str, **kwargs):
 
     # addons
     for addon_name, addon_ver in data["server_production_bundle"]["addons"].items():
-        settings = data["server_addons"]
+        settings = data["server_addons"].get(addon_name, {})
+        if addon_name == "ayon_ocio":
+            continue
         studio.set_addon_settings(addon_name, addon_ver, settings)
 
     # project
-    ...
-    # if data.get("projects"):
-    #     for project_name, project_data in data["projects"].items():
-    #         logging.info(f"Apply project {project_name}")
-    #         # project anatomy
-    #         studio.set_project_anatomy(project_name, project_data["anatomy"])
-    #         # project settings
-    #         for addon_name in project_data["addons"].items():
-    #             studio.set_project_addon_settings(
-    #                 project_name,
-    #                 addon_name,
-    #                 addon_version,
-    #                 project_data["settings"][addon_name],
-    #             )
+    if data.get("projects"):
+        for project_name, project_data in data["projects"].items():
+            logging.info(f"Apply project {project_name}")
+            # project anatomy
+            studio.set_project_anatomy(project_name, project_data["anatomy"])
+
+            # project productions settings
+            for addons in project_data["settings"].items():
+                addon_name, settings = addons
+                for addon in project_data["projects_settings_production"]["addons"]:
+                    if addon_name == "ayon_ocio":
+                        continue
+                    if addon["name"] == addon_name:
+                        version = addon["version"]
+                        studio.set_project_addon_settings(project_name, addon_name, version, settings)
+
+            # project staging settings
+            for addons in project_data["settings"].items():
+                addon_name, settings = addons
+                for addon in project_data["projects_settings_staging"]["addons"]:
+                    if addon_name == "ayon_ocio":
+                        continue
+                    if addon["name"] == addon_name:
+                        version = addon["version"]
+                        studio.set_project_addon_settings(project_name, addon_name, version, settings)
