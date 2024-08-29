@@ -23,6 +23,7 @@ def run(
 
     # apply anatomy
     if not operations or ("anatomy" in operations):
+        logging.info("Apply anatomy...")
         apply_anatomy(studio, projects, fake_apply, verbose)
     else:
         logging.info("Skip anatomy")
@@ -73,7 +74,7 @@ def apply_bundle(
         except Exception:
             # build and install if not installed
             addon.build()
-            studio.set_addon_settings(addon_name,addon_version, addon)
+            studio.set_addon_settings(addon_name, addon_version, addon)
 
     if is_staging:
         server_bundle = studio.get_staging_bundle()
@@ -150,11 +151,13 @@ def apply_anatomy(
             raise ServerDataError("Server anatomy data query failed")
 
         if not tools.compare_dicts(repo_studio_anatomy, server_studio_anatomy):
-            logging.info("Anatomy is missmatch")
+            logging.info("Studio anatomy is missmatch")
             if verbose:
                 show_dict_diffs(repo_studio_anatomy, server_studio_anatomy)
             preset_name = studio.get_default_anatomy_preset_name()
-            logging.info(f"Apply actual anatomy preset {preset_name} to {studio}")
+            logging.info(
+                f"Apply actual studio anatomy preset {preset_name} to {studio}"
+            )
             if not fake_apply:
                 studio.update_anatomy_preset(preset_name, repo_studio_anatomy)
         else:
