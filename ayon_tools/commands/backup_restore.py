@@ -46,21 +46,37 @@ def restore(studio: StudioSettings, path: str, **kwargs):
 
     # studio anatomy
     preset_name = studio.get_default_anatomy_preset_name()
-    studio.update_anatomy_preset(preset_name, data["anatomy"])
+    studio.update_anatomy_preset(preset_name, data["server_anatomy"])
+
     # attributes
-    ...
+    attributes = data["server_attributes"]
+    for attribute in attributes["attributes"]:
+        name = attribute["name"]
+        setting = attribute["data"]
+        scope = attribute["scope"]
+        studio.set_attributes_config(attribute_name=name, data=setting, scope=scope)
+
     # bundle
+    studio.update_bundle("staging", data["server_staging_bundle"])
+    studio.update_bundle("production", data["server_production_bundle"])
+
+    # addons
+    for addon_name, addon_ver in data["server_production_bundle"]["addons"].items():
+        settings = data["server_addons"]
+        studio.set_addon_settings(addon_name, addon_ver, settings)
+
+    # project
     ...
-    if data.get("projects"):
-        for project_name, project_data in data["projects"].items():
-            logging.info(f"Apply project {project_name}")
-            # project anatomy
-            studio.set_project_anatomy(project_name, project_data["anatomy"])
-            # project settings
-            for addon_name in project_data["addons"].items():
-                studio.set_project_addon_settings(
-                    project_name,
-                    addon_name,
-                    addon_version,
-                    project_data["settings"][addon_name],
-                )
+    # if data.get("projects"):
+    #     for project_name, project_data in data["projects"].items():
+    #         logging.info(f"Apply project {project_name}")
+    #         # project anatomy
+    #         studio.set_project_anatomy(project_name, project_data["anatomy"])
+    #         # project settings
+    #         for addon_name in project_data["addons"].items():
+    #             studio.set_project_addon_settings(
+    #                 project_name,
+    #                 addon_name,
+    #                 addon_version,
+    #                 project_data["settings"][addon_name],
+    #             )

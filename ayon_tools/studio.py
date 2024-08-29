@@ -82,7 +82,7 @@ class StudioSettings:
         return api.addons.get_addons_settings(auth=self.auth)
 
     def set_addon_settings(self, name: str, ver: str, settings: dict):
-        api.addons.set_studio_settings(name, ver, settings)
+        api.addons.set_studio_settings(name, ver, settings, auth=self.auth)
 
     # anatomy
 

@@ -73,7 +73,7 @@ def apply_bundle(
         except Exception:
             # build and install if not installed
             addon.build()
-            studio.install_addon(addon)
+            studio.set_addon_settings(addon_name,addon_version, addon)
 
     if is_staging:
         server_bundle = studio.get_staging_bundle()
