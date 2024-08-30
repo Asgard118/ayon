@@ -63,7 +63,7 @@ def restore(studio: StudioSettings, path: str, **kwargs):
     # addons
     for addon_name, addon_ver in data["server_production_bundle"]["addons"].items():
         settings = data["server_addons"].get(addon_name, {})
-        if addon_name == "ayon_ocio":
+        if addon_name == "ayon_ocio" or "openpype":
             continue
         studio.set_addon_settings(addon_name, addon_ver, settings)
 
@@ -78,7 +78,7 @@ def restore(studio: StudioSettings, path: str, **kwargs):
             for addons in project_data["settings"].items():
                 addon_name, settings = addons
                 for addon in project_data["projects_settings_production"]["addons"]:
-                    if addon_name == "ayon_ocio":
+                    if addon_name == "ayon_ocio" or "openpype":
                         continue
                     if addon["name"] == addon_name:
                         version = addon["version"]
@@ -88,7 +88,7 @@ def restore(studio: StudioSettings, path: str, **kwargs):
             for addons in project_data["settings"].items():
                 addon_name, settings = addons
                 for addon in project_data["projects_settings_staging"]["addons"]:
-                    if addon_name == "ayon_ocio":
+                    if addon_name == "ayon_ocio" or "openpype":
                         continue
                     if addon["name"] == addon_name:
                         version = addon["version"]

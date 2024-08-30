@@ -3,9 +3,10 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 from pathlib import Path
-from ayon_tools.repository import repo
+from ayon_tools.repository import repo, Repository
 import ayon_tools
 from ayon_tools.utils import server_addon_tools
+import subprocess
 
 if TYPE_CHECKING:
     from ayon_tools.studio import StudioSettings
@@ -19,6 +20,20 @@ class Addon:
         self.name = name
         self.studio = studio
         self.kwargs = kwargs
+
+    def get_info_file(self):
+        conf = repo.get_file_content(f'addons/{self.name}/info.yml', branch=self.studio.name, default=None)
+        if not conf:
+            conf = repo.get_file_content(f'addons/{self.name}/info.yml', branch='main', default=None)  # TODO default studio name from conf
+        if not conf:
+            raise ...
+        # check
+        assert conf.get('url'), f'Url not defined in addon config "{self.name}"'
+        return conf
+
+    @property
+    def url(self):
+        return self.get_addon_info()['url']
 
     def get_default_settings(self, addon_ver: str):
         return server_addon_tools.get_addon_default_settings(
@@ -126,4 +141,12 @@ class Addon:
     def get_repository_url(self) -> str:
         return self.get_addon_info()["url"]
 
-    def build(self) -> str: ...
+    def build(self, version) -> str:
+        rep = Repository(self.url)
+        rep.reload()
+        rep.set_tag(version)
+        create_package_script = rep.workdir / 'create_package.py'
+        subprocess.run(["python", create_package_script], capture_output=True, text=True)
+        zip_file = next(rep.workdir.joinpath('package').glob('*.zip'))
+
+        return zip_file

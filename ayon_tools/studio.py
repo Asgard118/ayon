@@ -9,7 +9,7 @@ from . import api
 from . import config
 from .repository import repo, Repository
 from .api import system
-
+from .base_addon import Addon
 
 class StudioSettings:
     bundle_config_file = "bundle.yml"
@@ -210,6 +210,8 @@ class StudioSettings:
     def set_all_attributes(self, data: dict):
         api.attributes.set_all_attributes(data, auth=self.auth)
 
+    # bundles
+
     def get_bundle(self, bundle_name: str):
         return api.bundles.get_bundle(bundle_name, auth=self.auth)
 
@@ -234,6 +236,12 @@ class StudioSettings:
 
     def create_new_bundle(self, data: dict, bundle_name: str):
         return api.bundles.create_new_bundles(data, bundle_name, auth=self.auth)
+
+    def install_addon(self, addon_name: str, version: str):
+        addon = Addon.get_addon_instance(addon_name, studio=self, version=version)
+        zip_file = addon.build(version)
+        zip = str(zip_file)
+        api.addons.install_addon(zip, auth=self.auth)
 
     # project configs
 

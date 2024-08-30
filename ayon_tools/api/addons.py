@@ -71,3 +71,7 @@ def set_project_settings(
 def update_project(auth: Auth = default_auth, *args: any, **kwargs: any):
     with auth:
         return ayon_api.update_project(*args, **kwargs)
+
+def install_addon(src_filepath, auth: Auth = default_auth):
+    with auth:
+        return ayon_api.upload_addon_zip(src_filepath)
