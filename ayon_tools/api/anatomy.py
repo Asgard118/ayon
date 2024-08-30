@@ -87,6 +87,8 @@ def get_project_anatomy(project_name: str, auth: Auth = default_auth) -> dict:
 
 
 def set_project_anatomy(project_name: str, anatomy: dict, auth: Auth = default_auth):
+    existing_anatomy = get_project_anatomy(project_name, auth=auth)
+    anatomy = merge_anatomy_types(existing_anatomy, anatomy)
     url_post = f"{auth.SERVER_URL}/api/projects/{project_name}/anatomy"
     response = requests.post(
         url=url_post,
@@ -99,12 +101,40 @@ def set_project_anatomy(project_name: str, anatomy: dict, auth: Auth = default_a
             detail = response.json().get("detail", "Unknown error")
         except json.JSONDecodeError:
             detail = response.text
-        if 'is still referenced from table' in detail:
+        if "is still referenced from table" in detail:
             raise AnatomyConflictError(detail)
-        elif '' in detail:
+        elif "" in detail:
             ...
         raise AnatomyUpdateError(detail)
 
+
+def merge_anatomy_types(current_anatomy: dict, new_anatomy: dict):
+    """
+    Данная функция делает слияние анатомий с целью избежать удаление уже существующих типов которые используются в проектах.
+    Это сделано чтобы избежать ошибки удаления используемых типов.
+    Например:
+    ayon_tools.exceptipns.AnatomyConflictError: name 'Compose' is still referenced from table "tasks".
+
+    TODO: проверить какие типы реально используются а какие можно удалить.
+    """
+
+    existing_folder_types = {
+        x["name"]: x for x in current_anatomy.get("folder_types", [])
+    }
+    new_folder_types = {x["name"]: x for x in new_anatomy.get("folder_types", [])}
+    existing_folder_types.update(new_folder_types)
+    new_anatomy["folder_types"] = list(existing_folder_types.values())
+
+    existing_task_types = {x["name"]: x for x in current_anatomy.get("task_types", [])}
+    new_task_types = {x["name"]: x for x in new_anatomy.get("task_types", [])}
+    existing_task_types.update(new_task_types)
+    new_anatomy["task_types"] = list(existing_task_types.values())
+
+    existing_statuses = {x["name"]: x for x in current_anatomy.get("statuses", [])}
+    new_statuses = {x["name"]: x for x in new_anatomy.get("statuses", [])}
+    existing_statuses.update(new_statuses)
+    new_anatomy["statuses"] = list(existing_statuses.values())
+    return new_anatomy
 
 
 def set_primary_preset(preset_name: str, auth: Auth = default_auth):

@@ -62,8 +62,9 @@ def cli(ctx, debug, stage, fake, skip_update, read_current_files, verbose):
     multiple=True,
     default=[],
 )
+@click.option("-b", "--skip_backup", is_flag=True, default=False, help="Skip backup")
 @click.pass_context
-def apply(ctx, studio, project, operations):
+def apply(ctx, studio, project, operations, skip_backup):
     """
     ayon_tools [options] apply <studio> [options]
     ayon_tools --stage apply studio_name -p project1 --project project2
@@ -71,12 +72,15 @@ def apply(ctx, studio, project, operations):
     from .commands import apply
     from .commands import backup_restore
 
-    backup_path = backup_restore.dump(studio, tempfile.mktemp(suffix=".json"))
+    backup_path = None
+    if not skip_backup:
+        backup_path = backup_restore.dump(studio, tempfile.mktemp(suffix=".json"))
     try:
         apply.run(studio, projects=project, operations=operations, **ctx.parent.params)
-    except Exception as e:
-        logging.error(str(e))
-        backup_restore.restore(studio, backup_path)
+    except Exception:
+        logging.exception("Apply command failed")
+        if not skip_backup and backup_path:
+            backup_restore.restore(studio, backup_path)
 
 
 @cli.command()
