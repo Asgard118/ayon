@@ -61,7 +61,6 @@ def apply_bundle(
     if not repo_bundle:
         logging.warning("Repository bundle data is not exists")
         return
-
     # check and install addons
     from ayon_tools.base_addon import Addon
 
@@ -69,12 +68,10 @@ def apply_bundle(
         # get addon class
         addon = Addon.get_addon_instance(addon_name, studio)
         # check is installed on server
-        try:
-            addon.get_server_settings(addon_version)
-        except Exception:
-            # build and install if not installed
-            addon.build()
-            studio.set_addon_settings(addon_name, addon_version, addon)
+        if not studio.addon_installed(addon_name, addon_version):
+            addon = studio.install_addon(addon_name, addon_version)
+        else:
+            addon = Addon.get_addon_instance(addon_name, studio)
 
     if is_staging:
         server_bundle = studio.get_staging_bundle()
@@ -85,12 +82,20 @@ def apply_bundle(
         # create new bundle
         logging.info("Create bundle: %s", bundle_name)
         if not fake_apply:
+            installers = studio.get_installers()
+
+            if installers["installers"] != repo_bundle["installer_version"]:
+                installer = tools.download_release_by_tag(repo_bundle["installer_version"])
+                print(repo_bundle["installer_version"])
+                studio.upload_installer(installer)
+
             studio.create_bundle(
                 bundle_name,
                 **repo_bundle,
                 is_production=not is_staging,
                 is_staging=is_staging,
             )
+            print(2)
     else:
         # update bundle
         logging.info("Update bundle: %s", bundle_name)
