@@ -4,6 +4,10 @@ import importlib.util
 import sys
 import logging
 from colorama import Fore, Style, init as _clrm_init
+from .config import WORKDIR
+import requests
+import os
+
 
 _clrm_init(autoreset=True)
 
@@ -180,3 +184,37 @@ def show_dict_diffs(dict1, dict2):
                 print(f"  {Fore.RED}{path}: {item}{Style.RESET_ALL}")
 
         print()
+
+
+def download_file(url, file_name):
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+
+    with open(file_name, "wb") as file:
+        for chunk in response.iter_content(chunk_size=8192):
+            file.write(chunk)
+
+def download_release_by_tag(tag: str):
+    url = f"https://api.github.com/repos/ynput/ayon-launcher/releases/tags/{tag}"
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        raise Exception(f"Failed to get release info: {response.status_code}")
+
+    release_data = response.json()
+
+    assets = release_data.get("assets", [])
+    if not assets:
+        raise Exception("No assets found for this release.")
+
+    downloaded_files = []
+
+    for asset in assets:
+        file_name = asset["name"]
+        if file_name.endswith('.json'):
+            download_url = asset["browser_download_url"]
+            file_path = os.path.join(WORKDIR, file_name)
+            download_file(download_url, file_path)
+            downloaded_files.append(file_path)
+
+    return downloaded_files
