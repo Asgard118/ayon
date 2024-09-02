@@ -25,6 +25,9 @@ def get_addons_settings(auth: Auth = default_auth):
     with auth:
         return ayon_api.get_addons_studio_settings()
 
+def get_installed_addon_list(auth: Auth = default_auth):
+    response = requests.get(url=f"{auth.SERVER_URL}/api/addons/install", headers=auth.HEADERS)
+    return response.json()
 
 def set_studio_settings(
     addon_name: str, version: str, settings: dict, auth: Auth = default_auth
