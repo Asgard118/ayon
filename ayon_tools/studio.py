@@ -1,6 +1,6 @@
 import logging
 import sys
-
+import os
 import ayon_api
 
 import re
@@ -83,6 +83,13 @@ class StudioSettings:
 
     def set_addon_settings(self, name: str, ver: str, settings: dict):
         api.addons.set_studio_settings(name, ver, settings, auth=self.auth)
+
+    def addon_installed(self, name: str, ver: str) -> bool:
+        addons = api.addons.get_installed_addon_list(auth=self.auth)
+        for item in addons.get('items', []):
+            if item.get('addonName') == name and item.get('addonVersion') == ver:
+                return True
+        return False
 
     # anatomy
 
@@ -411,3 +418,15 @@ class StudioSettings:
             return cls
         else:
             raise NameError(f'Solver module "{module_name}" not found')
+
+    # installer
+
+    def get_installers(self):
+        return ayon_api.get_installers()
+
+    def upload_installer(self, installer_files):
+        for src_filepath in installer_files:
+            filename = os.path.basename(src_filepath)
+            name_without_extension, _ = os.path.splitext(filename)
+            # как она лолжна работать я так и не понял, завтра сделаю через реквест там вроде поянтнее
+            ayon_api.upload_installer(src_filepath, dst_filename=name_without_extension)
