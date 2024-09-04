@@ -2,6 +2,8 @@ import logging
 import sys
 import os
 import ayon_api
+import json
+import requests
 
 import re
 
@@ -425,8 +427,15 @@ class StudioSettings:
         return ayon_api.get_installers()
 
     def upload_installer(self, installer_files):
-        for src_filepath in installer_files:
-            filename = os.path.basename(src_filepath)
-            name_without_extension, _ = os.path.splitext(filename)
-            # как она лолжна работать я так и не понял, завтра сделаю через реквест там вроде поянтнее
-            ayon_api.upload_installer(src_filepath, dst_filename=name_without_extension)
+         for src_filepath in installer_files:
+             try:
+                 with open(src_filepath, "r") as file:
+                     settings = json.load(file)
+                     api.bundles.set_installer(settings, auth=self.auth)
+             except requests.exceptions.HTTPError as e:
+                 if e.response.status_code == 409 or 500:
+                     print(f"Installer: {src_filepath} exist. Skipping to the next file.")
+                     continue
+                 else:
+                     # Если ошибка не 409, выбрасываем исключение снова
+                     raise

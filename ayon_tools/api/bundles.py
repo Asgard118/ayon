@@ -67,15 +67,15 @@ def create_bundle(
     """
     Создает бандл, с указаным названием, аддонами и их версиями, и версией инсталера
     """
-    from pprint import pprint
-    print('='*50)
-    print(repr(dict(
-        name=name,
-        addons=addons,
-        installer_version=installer_version,
-        **options
-    )))
-    print('='*50)
+    # from pprint import pprint
+    # print('='*50)
+    # print(repr(dict(
+    #     name=name,
+    #     addons=addons,
+    #     installer_version=installer_version,
+    #     **options
+    # )))
+    # print('='*50)
     with auth:
         ayon_api.create_bundle(
             name=name,
@@ -100,5 +100,13 @@ def create_new_bundles(data: dict, bundle_name: str, auth: Auth = default_auth):
         url=f"{auth.SERVER_URL}/api/bundles",
         headers=auth.HEADERS,
         json=data,
+    )
+    response.raise_for_status()
+
+def set_installer(settings: dict, auth: Auth = default_auth):
+    response = requests.post(
+        url=f"{auth.SERVER_URL}/api/desktop/installers",
+        headers=auth.HEADERS,
+        json=settings
     )
     response.raise_for_status()

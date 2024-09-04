@@ -82,16 +82,13 @@ def apply_bundle(
         # create new bundle
         logging.info("Create bundle: %s", bundle_name)
         if not fake_apply:
-            installers = studio.get_installers()
-
-            if installers["installers"] != repo_bundle["installer_version"]:
-                installer = tools.download_release_by_tag(repo_bundle["installer_version"])
-                print(repo_bundle["installer_version"])
-                studio.upload_installer(installer)
-
+            installer = tools.download_release_by_tag(repo_bundle["installer_version"])
+            studio.upload_installer(installer)
+            print(repo_bundle["installer_version"])
             studio.create_bundle(
                 bundle_name,
-                **repo_bundle,
+                addons=repo_bundle['addons'],
+                installer_version=repo_bundle["installer_version"],
                 is_production=not is_staging,
                 is_staging=is_staging,
             )
