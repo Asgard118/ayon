@@ -23,6 +23,7 @@ def dump(studio: StudioSettings, path: str = None, **kwargs):
     )
     # projects data
     projects = studio.get_projects()
+    data["projects"] = {}
     for project in projects:
         data["projects"][project["name"]] = dict(
             anatomy=studio.get_project_anatomy(project["name"]),
