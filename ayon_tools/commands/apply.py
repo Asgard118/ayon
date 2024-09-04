@@ -64,15 +64,18 @@ def apply_bundle(
     # check and install addons
     from ayon_tools.base_addon import Addon
 
+    restart_required = False
     for addon_name, addon_version in repo_bundle["addons"].items():
         # get addon class
-        addon = Addon.get_addon_instance(addon_name, studio)
+        # addon = Addon.get_addon_instance(addon_name, studio)
         # check is installed on server
         if not studio.addon_installed(addon_name, addon_version):
             addon = studio.install_addon(addon_name, addon_version)
+            restart_required = True
         else:
             addon = Addon.get_addon_instance(addon_name, studio)
-
+    if restart_required:
+        studio.restart_server()
     if is_staging:
         server_bundle = studio.get_staging_bundle()
     else:
@@ -87,7 +90,7 @@ def apply_bundle(
             print(repo_bundle["installer_version"])
             studio.create_bundle(
                 bundle_name,
-                addons=repo_bundle['addons'],
+                addons=repo_bundle["addons"],
                 installer_version=repo_bundle["installer_version"],
                 is_production=not is_staging,
                 is_staging=is_staging,

@@ -13,6 +13,7 @@ from .repository import repo, Repository
 from .api import system
 from .base_addon import Addon
 
+
 class StudioSettings:
     bundle_config_file = "bundle.yml"
     anatomy_config_file = "defaults/anatomy.json"
@@ -45,6 +46,32 @@ class StudioSettings:
         if full:
             return ".".join(map(str, version))
         return ".".join(map(str, version[:3]))
+
+    def restart_server(self, wait=True):
+        from datetime import datetime, timedelta
+        import time
+
+        restart_time = datetime.now()
+        system.restart(auth=self.auth)
+        if wait:
+            find_after = restart_time
+            time.sleep(1)
+            for i in range(10):
+                events = system.get_events(
+                    ["server.restart_requested"],
+                    newer_than=restart_time - timedelta(seconds=3),
+                )
+                if events:
+                    find_after = datetime.fromisoformat(events[-1]["createdAt"])
+                    break
+                time.sleep(1)
+            for i in range(10):
+                events = system.get_events(
+                    ["server.started"],
+                    newer_than=find_after,
+                )
+                if not events:
+                    break
 
     def __str__(self):
         return f'StudioSettings("{self.name}")'
@@ -88,8 +115,8 @@ class StudioSettings:
 
     def addon_installed(self, name: str, ver: str) -> bool:
         addons = api.addons.get_installed_addon_list(auth=self.auth)
-        for item in addons.get('items', []):
-            if item.get('addonName') == name and item.get('addonVersion') == ver:
+        for item in addons.get("items", []):
+            if item.get("addonName") == name and item.get("addonVersion") == ver:
                 return True
         return False
 
@@ -237,8 +264,6 @@ class StudioSettings:
         return api.bundles.get_staging_bundle(auth=self.auth)
 
     def create_bundle(self, name: str, addons, installer_version, **options):
-        # installer_version: str = data["installerVersion"]
-        # addon_list = data["addons"]
         return api.bundles.create_bundle(
             name, addons, installer_version, auth=self.auth, **options
         )
@@ -254,7 +279,7 @@ class StudioSettings:
 
     # project configs
 
-    def get_project_settings_for_status(self, status:str, project:str):
+    def get_project_settings_for_status(self, status: str, project: str):
         return api.projects.get_project_settings(status, project, auth=self.auth)
 
     def get_project_anatomy(self, project_name: str):
@@ -427,15 +452,17 @@ class StudioSettings:
         return ayon_api.get_installers()
 
     def upload_installer(self, installer_files):
-         for src_filepath in installer_files:
-             try:
-                 with open(src_filepath, "r") as file:
-                     settings = json.load(file)
-                     api.bundles.set_installer(settings, auth=self.auth)
-             except requests.exceptions.HTTPError as e:
-                 if e.response.status_code == 409 or 500:
-                     print(f"Installer: {src_filepath} exist. Skipping to the next file.")
-                     continue
-                 else:
-                     # Если ошибка не 409, выбрасываем исключение снова
-                     raise
+        for src_filepath in installer_files:
+            try:
+                with open(src_filepath, "r") as file:
+                    settings = json.load(file)
+                    api.bundles.set_installer(settings, auth=self.auth)
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 409 or 500:
+                    print(
+                        f"Installer: {src_filepath} exist. Skipping to the next file."
+                    )
+                    continue
+                else:
+                    # Если ошибка не 409, выбрасываем исключение снова
+                    raise
