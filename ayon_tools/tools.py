@@ -3,8 +3,11 @@ import inspect
 import importlib.util
 import sys
 import logging
+import time
+from pathlib import Path
+
 from colorama import Fore, Style, init as _clrm_init
-from .config import WORKDIR
+from .config import WORKDIR, TEMPDIR
 import requests
 import os
 
@@ -186,35 +189,90 @@ def show_dict_diffs(dict1, dict2):
         print()
 
 
-def download_file(url, file_name):
-    response = requests.get(url, stream=True)
+def download_file(url, save_file_name, max_retries=3, delay=1):
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+
+            with open(save_file_name, "wb") as file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    file.write(chunk)
+            return save_file_name
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.ChunkedEncodingError,
+        ) as e:
+            logging.warning(f"Attempt {attempt + 1} failed: {e}")
+            if attempt < max_retries - 1:
+                logging.info(f"Retrying in {delay} seconds...")
+                time.sleep(delay)
+            else:
+                raise
+
+
+def download_file_to_temp(url: str):
+    return download_file(url, TEMPDIR / Path(url).name)
+
+
+def get_json_file_content(url: str):
+    response = requests.get(url)
     response.raise_for_status()
+    return response.json()
 
-    with open(file_name, "wb") as file:
-        for chunk in response.iter_content(chunk_size=8192):
-            file.write(chunk)
 
-def download_release_by_tag(tag: str):
+def download_installer_releases_by_tag(tag: str):  # not used
+    assets_list = get_installers_download_urls(tag)
+    if not assets_list:
+        raise Exception("No assets found for this release.")
+
+    download_dir: Path = TEMPDIR / "installers" / tag
+    download_dir.mkdir(exist_ok=True, parents=True)
+
+    for asset in assets_list:
+        file_name = asset["name"]
+        file_path = download_dir / file_name
+        if file_path.exists():
+            if file_path.stat().st_size == asset["size"]:
+                continue
+            else:
+                file_path.unlink()
+        logging.info(f"Downloading installer file: {file_name}...")
+        download_file(asset["url"], file_path)
+
+    return download_dir
+
+
+def get_installers_download_urls(tag: str):
+    """
+    return [
+        {filename: filenme, url: url, size: 000},
+        ...
+    ]
+
+    """
     url = f"https://api.github.com/repos/ynput/ayon-launcher/releases/tags/{tag}"
     response = requests.get(url)
 
     if response.status_code != 200:
-        raise Exception(f"Failed to get release info: {response.status_code}")
+        raise Exception(f"Failed to get release info {tag}: {response.status_code}")
 
-    release_data = response.json()
+    assets_data = response.json().get("assets", [])
+    unique_set = set()
+    assets_data.sort(key=lambda x: x["name"], reverse=True)
+    json_files = [x for x in assets_data if Path(x["name"]).suffix == ".json"]
+    if not json_files:
+        raise Exception("json files not found")
 
-    assets = release_data.get("assets", [])
-    if not assets:
-        raise Exception("No assets found for this release.")
-
-    downloaded_files = []
-
-    for asset in assets:
-        file_name = asset["name"]
-        if file_name.endswith('.json'):
-            download_url = asset["browser_download_url"]
-            file_path = os.path.join(WORKDIR, file_name)
-            download_file(download_url, file_path)
-            downloaded_files.append(file_path)
-
-    return downloaded_files
+    for json_file in json_files:
+        asset_data = get_json_file_content(json_file["browser_download_url"])
+        key = (asset_data["version"], asset_data["platform"])
+        if key in unique_set:
+            continue
+        unique_set.add(key)
+        yield {
+            "url": json_file["browser_download_url"].rsplit(".", 1)[0],
+            "name": json_file["name"].rsplit(".", 1)[0],
+            "size": json_file["size"],
+            "json": asset_data,
+        }

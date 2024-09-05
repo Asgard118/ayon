@@ -7,6 +7,8 @@ WORKDIR = (
     Path(os.getenv("AYON_TOOLS_WORKDIR") or "~/.ayon_tools").expanduser().resolve()
 )
 config_file = WORKDIR / "config.json"
+TEMPDIR = WORKDIR / "tmp"
+TEMPDIR.mkdir(parents=True, exist_ok=True)
 
 
 def load_config():

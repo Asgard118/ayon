@@ -1,13 +1,15 @@
 import logging
 import sys
 import os
+from pathlib import Path
+
 import ayon_api
 import json
 import requests
 
 import re
 
-from . import api
+from . import api, tools
 from . import config
 from .repository import repo, Repository
 from .api import system
@@ -57,9 +59,11 @@ class StudioSettings:
             find_after = restart_time
             time.sleep(1)
             for i in range(10):
-                events = system.get_events(
-                    ["server.restart_requested"],
-                    newer_than=restart_time - timedelta(seconds=3),
+                events = list(
+                    system.get_events(
+                        ["server.restart_requested"],
+                        newer_than=restart_time - timedelta(seconds=3),
+                    )
                 )
                 if events:
                     find_after = datetime.fromisoformat(events[-1]["createdAt"])
@@ -273,9 +277,10 @@ class StudioSettings:
 
     def install_addon(self, addon_name: str, version: str):
         addon = Addon.get_addon_instance(addon_name, studio=self, version=version)
-        zip_file = addon.build(version)
-        zip = str(zip_file)
-        api.addons.install_addon(zip, auth=self.auth)
+        zip_file: Path = addon.build(version)
+        logging.info(f"Upload and install file {zip_file}")
+        api.addons.install_addon(zip_file.as_posix(), auth=self.auth)
+        zip_file.unlink()
 
     # project configs
 
@@ -448,21 +453,31 @@ class StudioSettings:
 
     # installer
 
-    def get_installers(self):
-        return ayon_api.get_installers()
+    def installer_exists(self, name: str) -> bool:
+        return api.bundles.installer_exists(name, auth=self.auth)
 
-    def upload_installer(self, installer_files):
-        for src_filepath in installer_files:
-            try:
-                with open(src_filepath, "r") as file:
-                    settings = json.load(file)
-                    api.bundles.set_installer(settings, auth=self.auth)
-            except requests.exceptions.HTTPError as e:
-                if e.response.status_code == 409 or 500:
-                    print(
-                        f"Installer: {src_filepath} exist. Skipping to the next file."
-                    )
-                    continue
+    def add_installer(self, version, reinstall=False):
+        installers_info = tools.get_installers_download_urls(version)
+
+        to_install = []
+        for inst in installers_info:
+            if self.installer_exists(inst["name"]):
+                if reinstall:
+                    api.bundles.remove_installer(inst["name"], self.auth)
                 else:
-                    # Если ошибка не 409, выбрасываем исключение снова
-                    raise
+                    continue
+            to_install.append(inst)
+        for inst in to_install:
+            logging.info(f'Add Installer {inst["name"]}')
+            api.bundles.download_and_install_installer(
+                inst["url"], inst["json"], auth=self.auth
+            )
+
+    def upload_installer(self, installer_dir: Path, reinstall=False):
+        for src_filepath in installer_dir.glob("*.json"):
+            api.bundles.upload_installer(
+                src_filepath.with_suffix(""),
+                src_filepath,
+                self.auth,
+                reinstall=reinstall,
+            )

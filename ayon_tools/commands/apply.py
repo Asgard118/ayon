@@ -62,7 +62,7 @@ def apply_bundle(
         logging.warning("Repository bundle data is not exists")
         return
     # check and install addons
-    from ayon_tools.base_addon import Addon
+    # from ayon_tools.base_addon import Addon
 
     restart_required = False
     for addon_name, addon_version in repo_bundle["addons"].items():
@@ -70,24 +70,30 @@ def apply_bundle(
         # addon = Addon.get_addon_instance(addon_name, studio)
         # check is installed on server
         if not studio.addon_installed(addon_name, addon_version):
-            addon = studio.install_addon(addon_name, addon_version)
+            logging.info(f"Install addon {addon_name} {addon_version}")
+            studio.install_addon(addon_name, addon_version)
             restart_required = True
         else:
-            addon = Addon.get_addon_instance(addon_name, studio)
+            logging.info(f"Addon {addon_name} {addon_version} already installed")
+            # Addon.get_addon_instance(addon_name, studio)
     if restart_required:
+        logging.info("Restarting...")
         studio.restart_server()
+        logging.info("Continue...")
     if is_staging:
         server_bundle = studio.get_staging_bundle()
     else:
         server_bundle = studio.get_productions_bundle()
 
+    # installers_dir = tools.download_release_by_tag(repo_bundle["installer_version"])
+    # studio.upload_installer(installers_dir)
+    studio.add_installer(repo_bundle["installer_version"])
+
     if not server_bundle:
         # create new bundle
         logging.info("Create bundle: %s", bundle_name)
         if not fake_apply:
-            installer = tools.download_release_by_tag(repo_bundle["installer_version"])
-            studio.upload_installer(installer)
-            print(repo_bundle["installer_version"])
+
             studio.create_bundle(
                 bundle_name,
                 addons=repo_bundle["addons"],
@@ -95,11 +101,11 @@ def apply_bundle(
                 is_production=not is_staging,
                 is_staging=is_staging,
             )
-            print(2)
     else:
         # update bundle
         logging.info("Update bundle: %s", bundle_name)
         if not fake_apply:
+            studio.restart_server()
             studio.update_bundle(bundle_name, repo_bundle)
 
 

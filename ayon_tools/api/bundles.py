@@ -1,3 +1,7 @@
+import json
+import logging
+from pathlib import Path
+
 import ayon_api
 from ayon_api import get_bundle_settings
 from .auth import default_auth, Auth
@@ -62,7 +66,7 @@ def create_bundle(
     addons: dict,
     installer_version: str,
     auth: Auth = default_auth,
-    **options
+    **options,
 ):
     """
     Создает бандл, с указаным названием, аддонами и их версиями, и версией инсталера
@@ -81,7 +85,7 @@ def create_bundle(
             name=name,
             addon_versions=addons,
             installer_version=installer_version,
-            **options
+            **options,
         )
 
 
@@ -93,6 +97,7 @@ def update_bundle(bundle_name: str, settings: dict, auth: Auth = default_auth):
     )
     response.raise_for_status()
 
+
 def create_new_bundles(data: dict, bundle_name: str, auth: Auth = default_auth):
     data["activeUser"] = "admin"
     data["name"] = bundle_name
@@ -103,10 +108,59 @@ def create_new_bundles(data: dict, bundle_name: str, auth: Auth = default_auth):
     )
     response.raise_for_status()
 
-def set_installer(settings: dict, auth: Auth = default_auth):
-    response = requests.post(
-        url=f"{auth.SERVER_URL}/api/desktop/installers",
-        headers=auth.HEADERS,
-        json=settings
+
+def installer_exists(installer_name, auth: Auth = default_auth):
+    with auth:
+        for inst in ayon_api.get_installers()["installers"]:
+            if inst["filename"] == installer_name:
+                return True
+    return False
+
+
+def download_and_install_installer(download_url, meta_data, auth: Auth):
+    from ayon_tools.tools import download_file_to_temp
+
+    logging.info(
+        f"Download file... {Path(download_url).name}",
     )
-    response.raise_for_status()
+    local_file = Path(download_file_to_temp(download_url))
+    with auth:
+        logging.info(f"Upload meta file for {local_file.name}")
+        resp = ayon_api.get_server_api_connection().post(
+            "desktop/installers", **meta_data
+        )
+        resp.raise_for_status()
+
+        logging.info("Upload installer file...")
+        ayon_api.upload_installer(local_file.as_posix(), local_file.name)
+
+
+def upload_installer(installer_file, meta_file, auth: Auth, reinstall=False):
+    installer_file = Path(installer_file)
+    assert installer_file.exists(), "Installer file not found"
+    meta_file = Path(meta_file)
+    assert meta_file.exists(), "Meta file not found"
+    with meta_file.open() as f:
+        installer_data = json.load(f)
+    # check is installed
+    if installer_exists(installer_file.name, auth):
+        if reinstall:
+            ayon_api.delete_installer(installer_file.name)
+        else:
+            logging.info(f"Installer {installer_file.name} already exists")
+            return
+    # install
+    with auth:
+        logging.info(f"Upload meta file for {installer_data['filename']}")
+        resp = ayon_api.get_server_api_connection().post(
+            "desktop/installers", **installer_data
+        )
+        resp.raise_for_status()
+
+        logging.info("Upload installer file ")
+        ayon_api.upload_installer(installer_file.as_posix(), installer_file.name)
+
+
+def remove_installer(name: str, auth: Auth):
+    with auth:
+        ayon_api.delete_installer(name)
