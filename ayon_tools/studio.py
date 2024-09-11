@@ -15,7 +15,6 @@ from .repository import repo, Repository
 from .api import system
 from .base_addon import Addon
 
-
 class StudioSettings:
     bundle_config_file = "bundle.yml"
     anatomy_config_file = "defaults/anatomy.json"
@@ -119,8 +118,8 @@ class StudioSettings:
 
     def addon_installed(self, name: str, ver: str) -> bool:
         addons = api.addons.get_installed_addon_list(auth=self.auth)
-        for item in addons.get("items", []):
-            if item.get("addonName") == name and item.get("addonVersion") == ver:
+        for item in addons.get('items', []):
+            if item.get('addonName') == name and item.get('addonVersion') == ver:
                 return True
         return False
 
@@ -268,6 +267,8 @@ class StudioSettings:
         return api.bundles.get_staging_bundle(auth=self.auth)
 
     def create_bundle(self, name: str, addons, installer_version, **options):
+        # installer_version: str = data["installerVersion"]
+        # addon_list = data["addons"]
         return api.bundles.create_bundle(
             name, addons, installer_version, auth=self.auth, **options
         )
@@ -277,14 +278,13 @@ class StudioSettings:
 
     def install_addon(self, addon_name: str, version: str):
         addon = Addon.get_addon_instance(addon_name, studio=self, version=version)
-        zip_file: Path = addon.build(version)
-        logging.info(f"Upload and install file {zip_file}")
-        api.addons.install_addon(zip_file.as_posix(), auth=self.auth)
-        zip_file.unlink()
+        zip_file = addon.build(version)
+        zip = str(zip_file)
+        api.addons.install_addon(zip, auth=self.auth)
 
     # project configs
 
-    def get_project_settings_for_status(self, status: str, project: str):
+    def get_project_settings_for_status(self, status:str, project:str):
         return api.projects.get_project_settings(status, project, auth=self.auth)
 
     def get_project_anatomy(self, project_name: str):
@@ -481,3 +481,12 @@ class StudioSettings:
                 self.auth,
                 reinstall=reinstall,
             )
+
+    def upload_dep_pack(self, name_zip: str, filename: str):
+        api.packages.upload_dep_package(name_zip, filename, auth=self.auth)
+
+    def create_dep_pack(self, *args, **kwargs):
+        api.packages.create_dep_packages(*args, **kwargs, auth=self.auth)
+
+    def get_pack(self):
+        return api.packages.get_dep_packages(auth=self.auth)

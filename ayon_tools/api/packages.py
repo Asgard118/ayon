@@ -13,7 +13,12 @@ def get_dep_packages(auth: Auth = default_auth) -> dict:
 
 
 def upload_dep_package(
-    archive: str, file_name: str, platform_name: str, auth: Auth = default_auth
+    archive: str, file_name: str,  auth: Auth = default_auth
 ):
     with auth:
-        ayon_api.upload_dependency_package(archive, file_name, platform_name)
+        ayon_api.upload_dependency_package(archive, file_name)
+
+
+def create_dep_packages(auth: Auth = default_auth, *args, **kwargs):
+    with auth:
+        ayon_api.create_dependency_package(*args, **kwargs)
