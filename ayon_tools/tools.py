@@ -276,3 +276,13 @@ def get_installers_download_urls(tag: str):
             "size": json_file["size"],
             "json": asset_data,
         }
+
+
+def get_dependency(filename: str):
+    base_dir = WORKDIR
+
+    for root, dirs, files in os.walk(base_dir):
+        if filename in files:
+            return os.path.join(root, filename)
+
+    return None
