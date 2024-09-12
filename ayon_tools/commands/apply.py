@@ -40,7 +40,9 @@ def run(
     else:
         logging.info("Skip attributes")
 
-    projects = projects or studio.get_project_names()
+    logging.info("Apply command finished!")
+
+    # projects = projects or studio.get_project_names()
     # apply projects settings
 
 
