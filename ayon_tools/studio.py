@@ -9,6 +9,7 @@ import requests
 
 import re
 
+import ayon_tools.api.installers
 from . import api, tools
 from . import config
 from .exceptipns import DepPackageNotExists
@@ -451,33 +452,35 @@ class StudioSettings:
     # installer
 
     def installer_exists(self, name: str) -> bool:
-        return api.bundles.installer_exists(name, auth=self.auth)
+        return ayon_tools.api.installers.installer_exists(name, auth=self.auth)
 
     def add_installer(self, version, reinstall=False):
-        installers_info = tools.get_installers_download_urls(version)
+        installers_info = ayon_tools.api.installers.get_installers_download_urls(
+            version
+        )
 
         to_install = []
         for inst in installers_info:
             if self.installer_exists(inst["name"]):
                 if reinstall:
-                    api.bundles.remove_installer(inst["name"], self.auth)
+                    ayon_tools.api.installers.remove_installer(inst["name"], self.auth)
                 else:
                     continue
             to_install.append(inst)
         for inst in to_install:
             logging.info(f'Add Installer {inst["name"]}')
-            api.bundles.download_and_install_installer(
+            ayon_tools.api.installers.download_and_install_installer(
                 inst["url"], inst["json"], auth=self.auth
             )
 
-    def upload_installer(self, installer_dir: Path, reinstall=False):
-        for src_filepath in installer_dir.glob("*.json"):
-            api.bundles.upload_installer(
-                src_filepath.with_suffix(""),
-                src_filepath,
-                self.auth,
-                reinstall=reinstall,
-            )
+    # def upload_installer(self, installer_dir: Path, reinstall=False):
+    #     for src_filepath in installer_dir.glob("*.json"):
+    #         ayon_tools.api.installers.upload_installer(
+    #             src_filepath.with_suffix(""),
+    #             src_filepath,
+    #             self.auth,
+    #             reinstall=reinstall,
+    #         )
 
     # dependency packages
 
@@ -487,6 +490,20 @@ class StudioSettings:
 
     def get_dep_package_names(self):
         return [Path(p["filename"]).stem for p in self.get_dep_packages()]
+
+    def add_dep_packages(self, package_names: list[str]):
+        """
+        Add dep packages and return correct bundle data
+        """
+        logging.info(f"Add dep packages {package_names}")
+        existing_packages = self.get_dep_package_names()
+        for package_name in package_names:
+            if package_name in existing_packages:
+                logging.info(f"Package {package_name} already exists")
+                continue
+            logging.info(f"Add dependency package {package_name}")
+            self.add_dep_package(package_name)
+        return api.packages.package_name_to_data(*package_names)
 
     def add_dep_package(self, package_name: str):
         return api.packages.add_dep_package(package_name, auth=self.auth)
