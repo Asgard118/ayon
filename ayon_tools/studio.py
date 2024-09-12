@@ -53,6 +53,7 @@ class StudioSettings:
 
     def restart_server(self, wait=True):
         from datetime import datetime, timedelta
+        from ayon_api.exceptions import ServerError
         import time
 
         restart_time = datetime.now()
@@ -72,10 +73,14 @@ class StudioSettings:
                     break
                 time.sleep(1)
             for i in range(10):
-                events = system.get_events(
-                    ["server.started"],
-                    newer_than=find_after,
-                )
+                try:
+                    events = system.get_events(
+                        ["server.started"],
+                        newer_than=find_after,
+                    )
+                except ServerError:
+                    time.sleep(1)
+                    continue
                 if not events:
                     break
 
