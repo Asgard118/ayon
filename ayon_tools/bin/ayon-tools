@@ -1,0 +1,7 @@
+#!/bin/bash
+
+pushd . > /dev/null
+cd ../..
+export PYTHONPATH=$PYTHONPATH:${PWD}
+poetry run python -m ayon_tools $@
+popd > /dev/null
