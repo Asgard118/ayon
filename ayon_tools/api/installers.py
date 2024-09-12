@@ -23,8 +23,8 @@ def installer_exists(installer_name, auth: Auth = default_auth):
 
 def download_and_install_installer(download_url, meta_data, auth: Auth):
     filename = Path(download_url).name
-    logging.info(f"Download file... {filename}")
     local_file = Path(download_file(download_url, INSTALLERS_DIR / filename))
+    logging.info(f"Download file... {filename} to {local_file}")
     with auth:
         logging.info(f"Upload meta file for {local_file.name}")
         resp = ayon_api.get_server_api_connection().post(
