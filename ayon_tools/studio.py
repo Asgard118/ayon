@@ -267,14 +267,9 @@ class StudioSettings:
         return api.bundles.get_staging_bundle(auth=self.auth)
 
     def create_bundle(self, name: str, addons, installer_version, **options):
-        # installer_version: str = data["installerVersion"]
-        # addon_list = data["addons"]
         return api.bundles.create_bundle(
             name, addons, installer_version, auth=self.auth, **options
         )
-
-    def create_new_bundle(self, data: dict, bundle_name: str):
-        return api.bundles.create_new_bundles(data, bundle_name, auth=self.auth)
 
     def install_addon(self, addon_name: str, version: str):
         addon = Addon.get_addon_instance(addon_name, studio=self, version=version)
@@ -482,11 +477,8 @@ class StudioSettings:
                 reinstall=reinstall,
             )
 
-    def upload_dep_pack(self, name_zip: str, filename: str):
-        api.packages.upload_dep_package(name_zip, filename, auth=self.auth)
-
-    def create_dep_pack(self, *args, **kwargs):
-        api.packages.create_dep_packages(*args, **kwargs, auth=self.auth)
+    def add_dep_package(self, name):
+        api.packages.set_dep_pack(name, auth=self.auth)
 
     def get_pack(self):
         return api.packages.get_dep_packages(auth=self.auth)
