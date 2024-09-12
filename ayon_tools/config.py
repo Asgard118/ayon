@@ -27,6 +27,7 @@ REPOSITORY_DIR = WORKDIR / "repository"
 DEP_PACKAGES_DIR = WORKDIR / "dep_packages"
 INSTALLERS_DIR = WORKDIR / "installers"
 REPOSITORY_URL = conf.get("configs_repository_url")
+REMOTE_STORAGE_URL = conf.get("remote_storage_url") or "todo..."
 BACKEND_URL = (
     conf.get("ayon_backend_repository_url") or "https://github.com/ynput/ayon-backend"
 )
