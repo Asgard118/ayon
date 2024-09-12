@@ -84,11 +84,13 @@ def apply_bundle(
         server_bundle = studio.get_staging_bundle()
     else:
         server_bundle = studio.get_productions_bundle()
-
-    # installers_dir = tools.download_release_by_tag(repo_bundle["installer_version"])
-    # studio.upload_installer(installers_dir)
+    # installers
     studio.add_installer(repo_bundle["installer_version"])
-
+    studio.restart_server()
+    # dep packages
+    repo_bundle["dependency_packages"] = studio.add_dep_packages(
+        repo_bundle["dependency_packages"]
+    )
     if not server_bundle:
         # create new bundle
         logging.info("Create bundle: %s", bundle_name)
