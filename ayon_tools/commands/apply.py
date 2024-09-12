@@ -102,6 +102,7 @@ def apply_bundle(
                 installer_version=repo_bundle["installer_version"],
                 is_production=not is_staging,
                 is_staging=is_staging,
+                dependency_packages=repo_bundle["dependency_packages"],
             )
     else:
         # update bundle
