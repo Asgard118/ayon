@@ -269,14 +269,9 @@ class StudioSettings:
         return api.bundles.get_staging_bundle(auth=self.auth)
 
     def create_bundle(self, name: str, addons, installer_version, **options):
-        # installer_version: str = data["installerVersion"]
-        # addon_list = data["addons"]
         return api.bundles.create_bundle(
             name, addons, installer_version, auth=self.auth, **options
         )
-
-    def create_new_bundle(self, data: dict, bundle_name: str):
-        return api.bundles.create_new_bundles(data, bundle_name, auth=self.auth)
 
     def install_addon(self, addon_name: str, version: str):
         addon = Addon.get_addon_instance(addon_name, studio=self, version=version)

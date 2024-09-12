@@ -278,7 +278,12 @@ def get_installers_download_urls(tag: str):
         }
 
 
-def get_dependency(filename: str):
+def get_dependency(filename: str, json=None):
+
+    if json:
+        if not filename.endswith('.json'):
+            filename += '.json'
+
     base_dir = WORKDIR
 
     for root, dirs, files in os.walk(base_dir):

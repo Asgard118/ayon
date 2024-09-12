@@ -6,6 +6,8 @@ from ayon_api.exceptions import HTTPRequestError
 from .auth import default_auth, Auth
 from ..config import DEP_PACKAGES_DIR
 from ..exceptipns import DepPackageNotExists, DepPackageAlreadyInstalled
+from ayon_tools import tools
+
 
 
 # dependency packages
