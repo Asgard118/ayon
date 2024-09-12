@@ -9,6 +9,10 @@
   studios/
     studio_name1.json
     studio_name2.json
+  dep_packages/
+    ayon_linux.zip
+    ayon_linux.zip.json
+    ...
 ```
 
 Пример кофигурации
@@ -16,10 +20,8 @@
 _config.json_
 ```json
 {
-  "__REQUIRED FIELDS__": "",
   "configs_repository_url": "git@github.com:username/repository.git",
-  "__OPTIONAL FIELDS__": "",
-  "studio_config_files_dir": "~/studios",
+  "studio_config_files_dir": "~/studios"
   
 }
 ```
