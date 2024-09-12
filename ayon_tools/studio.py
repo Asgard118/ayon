@@ -11,9 +11,11 @@ import re
 
 from . import api, tools
 from . import config
+from .exceptipns import DepPackageNotExists
 from .repository import repo, Repository
 from .api import system
 from .base_addon import Addon
+
 
 class StudioSettings:
     bundle_config_file = "bundle.yml"
@@ -118,8 +120,8 @@ class StudioSettings:
 
     def addon_installed(self, name: str, ver: str) -> bool:
         addons = api.addons.get_installed_addon_list(auth=self.auth)
-        for item in addons.get('items', []):
-            if item.get('addonName') == name and item.get('addonVersion') == ver:
+        for item in addons.get("items", []):
+            if item.get("addonName") == name and item.get("addonVersion") == ver:
                 return True
         return False
 
@@ -284,7 +286,7 @@ class StudioSettings:
 
     # project configs
 
-    def get_project_settings_for_status(self, status:str, project:str):
+    def get_project_settings_for_status(self, status: str, project: str):
         return api.projects.get_project_settings(status, project, auth=self.auth)
 
     def get_project_anatomy(self, project_name: str):
@@ -482,11 +484,21 @@ class StudioSettings:
                 reinstall=reinstall,
             )
 
-    def upload_dep_pack(self, name_zip: str, filename: str):
-        api.packages.upload_dep_package(name_zip, filename, auth=self.auth)
+    # dependency packages
 
-    def create_dep_pack(self, *args, **kwargs):
-        api.packages.create_dep_packages(*args, **kwargs, auth=self.auth)
+    def get_dep_packages(self):
+        data = api.packages.get_dep_packages(auth=self.auth)
+        return data["packages"]
 
-    def get_pack(self):
-        return api.packages.get_dep_packages(auth=self.auth)
+    def get_dep_package_names(self):
+        return [Path(p["filename"]).stem for p in self.get_dep_packages()]
+
+    def add_dep_package(self, package_name: str):
+        return api.packages.add_dep_package(package_name, auth=self.auth)
+
+    def remove_dep_package(self, package_name: str):
+        try:
+            api.packages.remove_dep_package(package_name, auth=self.auth)
+            return True
+        except DepPackageNotExists:
+            return False

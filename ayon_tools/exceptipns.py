@@ -20,3 +20,11 @@ class AnatomyUpdateError(AyonToolError):
 
 class AnatomyConflictError(AnatomyUpdateError):
     pass
+
+
+class DepPackageNotExists(AyonToolError):
+    pass
+
+
+class DepPackageAlreadyInstalled(AyonToolError):
+    pass
