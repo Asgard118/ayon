@@ -21,12 +21,17 @@ def load_config():
 conf = load_config()
 REPOSITORY_DIR = WORKDIR / "repository"
 DEP_PACKAGES_DIR = WORKDIR / "dep_packages"
+INSTALLERS_DIR = WORKDIR / "installers"
 REPOSITORY_URL = conf.get("configs_repository_url")
 BACKEND_URL = conf.get("ayon_backend_repository_url")
 STUDIO_CONFIG_DIR = Path(conf.get("studio_config_files_dir") or WORKDIR / "studios")
 
 assert REPOSITORY_URL, f"Repository URL not found in config {config_file}"
 assert BACKEND_URL, f"Backend URL not found in config {config_file}"
+
+# ssh
+PRIVATE_KEY_PATH = conf.get("private_key_path") or "~/.ssh/id_rsa"
+PUBLIC_KEY_PATH = conf.get("public_key_path") or "~/.ssh/id_rsa.pub"
 
 
 def get_studio_local_config(studio_name):
