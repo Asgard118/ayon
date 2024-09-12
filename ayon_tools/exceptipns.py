@@ -2,6 +2,10 @@ class AyonToolError(Exception):
     pass
 
 
+class ConfigError(AyonToolError):
+    pass
+
+
 class RepositoryDataError(AyonToolError):
     pass
 
