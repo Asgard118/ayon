@@ -449,6 +449,9 @@ class StudioSettings:
         else:
             raise NameError(f'Solver module "{module_name}" not found')
 
+    def disable_onboarding(self):
+        api.system.disable_onboarding(self.auth)
+
     # installer
 
     def installer_exists(self, name: str) -> bool:

@@ -21,6 +21,7 @@ def run(
     is_staging = bool(kwargs.get("stage"))
     projects = projects or studio.get_project_names()
 
+    studio.disable_onboarding()
     # apply anatomy
     if not operations or ("anatomy" in operations):
         logging.info("Apply anatomy...")

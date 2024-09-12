@@ -31,3 +31,8 @@ def get_events(
         older_than = older_than.isoformat()
     with auth:
         return ayon_api.get_events(topics, newer_than=newer_than, older_than=older_than)
+
+
+def disable_onboarding(auth: Auth = default_auth):
+    with auth:
+        ayon_api.post("onboarding/abort")
