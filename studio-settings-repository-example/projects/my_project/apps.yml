@@ -1,7 +1,0 @@
-apps:
-  - name: maya
-    versions:
-      - 2023
-      - 2024
-  - houdini:
-      - 20.0.123
