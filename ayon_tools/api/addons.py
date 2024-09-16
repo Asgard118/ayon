@@ -58,12 +58,17 @@ def set_addon_studio_settings(
     """
     Обновление конкретной версии аддона, по определенным настройкам
     """
-    response = requests.post(
-        url=f"{auth.SERVER_URL}/api/addons/{addon_name}/{version}/settings?variant={variant}",
-        headers=auth.HEADERS,
-        json=settings,
-    )
-    response.raise_for_status()
+    with auth:
+        ayon_api.post(
+            f"/addons/{addon_name}/{version}/settings?variant={variant}", **settings
+        )
+    # response = requests.post(
+    #     url=f"{auth.SERVER_URL}/api/addons/{addon_name}/{version}/settings?variant={variant}",
+    #     headers=auth.HEADERS,
+    #     json=settings,
+    # )
+
+    # response.raise_for_status()
 
 
 # project settings
@@ -122,3 +127,12 @@ def get_installed_addon_list(auth: Auth = default_auth):
         url=f"{auth.SERVER_URL}/api/addons/install", headers=auth.HEADERS
     )
     return response.json()
+
+
+def get_addon_default_settings(addon_name, addon_version, auth: Auth = default_auth):
+    from ayon_tools.api.ayon_tools_addon import ayon_tools_url
+
+    url = f"{auth.SERVER_URL}{ayon_tools_url(auth)}/{addon_name}/{addon_version}"
+    resp = requests.get(url, headers=auth.HEADERS)
+    resp.raise_for_status()
+    return resp.json()
