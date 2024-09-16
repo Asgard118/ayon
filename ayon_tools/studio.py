@@ -61,7 +61,7 @@ class StudioSettings:
         if wait:
             find_after = restart_time
             time.sleep(1)
-            for i in range(10):
+            for i in range(15):
                 events = list(
                     system.get_events(
                         ["server.restart_requested"],
@@ -72,7 +72,7 @@ class StudioSettings:
                     find_after = datetime.fromisoformat(events[-1]["createdAt"])
                     break
                 time.sleep(1)
-            for i in range(10):
+            for i in range(15):
                 try:
                     events = system.get_events(
                         ["server.started"],
@@ -81,7 +81,7 @@ class StudioSettings:
                 except ServerError:
                     time.sleep(1)
                     continue
-                if not events:
+                if events:
                     break
 
     def __str__(self):
@@ -114,6 +114,11 @@ class StudioSettings:
 
     def get_addon_settings(self, name: str, ver: str):
         return api.addons.get_addon_studio_settings(name, ver, auth=self.auth)
+
+    def get_addon_default_settings(self, addon_name: str, addon_version: str):
+        return api.ayon_tools_addon.get_addon_default_settings(
+            addon_name, addon_version, self.auth
+        )
 
     def set_addon_settings(self, name: str, ver: str, settings: dict, variant: str):
         api.addons.set_addon_studio_settings(
