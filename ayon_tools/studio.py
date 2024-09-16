@@ -101,8 +101,8 @@ class StudioSettings:
 
     # SERVER ##################################################################
 
-    def get_server_addons_settings(self):
-        return api.addons.get_addons_settings(auth=self.auth)
+    def get_server_addons_settings(self, bundle_name: str, variant: str):
+        return api.addons.get_addons_settings(bundle_name, variant, auth=self.auth)
 
     def get_projects(self):
         return api.projects.get_projects(auth=self.auth)
@@ -112,17 +112,13 @@ class StudioSettings:
 
     # studio addon settings
 
-    def get_addons(self):
-        return api.addons.get_studio_settings(auth=self.auth)
-
     def get_addon_settings(self, name: str, ver: str):
         return api.addons.get_addon_studio_settings(name, ver, auth=self.auth)
 
-    def get_addons_settings(self):
-        return api.addons.get_addons_settings(auth=self.auth)
-
-    def set_addon_settings(self, name: str, ver: str, settings: dict):
-        api.addons.set_studio_settings(name, ver, settings, auth=self.auth)
+    def set_addon_settings(self, name: str, ver: str, settings: dict, variant: str):
+        api.addons.set_addon_studio_settings(
+            name, ver, settings, variant, auth=self.auth
+        )
 
     def addon_installed(self, name: str, ver: str) -> bool:
         addons = api.addons.get_installed_addon_list(auth=self.auth)
@@ -285,10 +281,7 @@ class StudioSettings:
         zip = str(zip_file)
         api.addons.install_addon(zip, auth=self.auth)
 
-    # project configs
-
-    def get_project_settings_for_status(self, status: str, project: str):
-        return api.projects.get_project_settings(status, project, auth=self.auth)
+    # project anatomy
 
     def get_project_anatomy(self, project_name: str):
         return api.anatomy.get_project_anatomy(project_name, auth=self.auth)
@@ -296,13 +289,18 @@ class StudioSettings:
     def set_project_anatomy(self, project_name: str, settings: dict):
         return api.anatomy.set_project_anatomy(project_name, settings, auth=self.auth)
 
-    def get_project_addons_settings(self, project_name: str):
+    # addon settings
+
+    # def get_project_settings_for_status(self, status: str, project: str):
+    #     return api.projects.get_project_settings(status, project, auth=self.auth)
+
+    def get_project_addons_settings(self, project_name: str, variant: str):
         return api.addons.get_project_settings(project_name, auth=self.auth)
 
     def set_project_addon_settings(
         self, project_name: str, addon_name: str, addon_version: str, settings: dict
     ):
-        return api.addons.set_project_settings(
+        return api.addons.set_addon_project_settings(
             addon_name, addon_version, project_name, settings, auth=self.auth
         )
 

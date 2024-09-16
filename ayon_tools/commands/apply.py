@@ -22,6 +22,7 @@ def run(
     projects = projects or studio.get_project_names()
 
     studio.disable_onboarding()
+
     # apply anatomy
     if not operations or ("anatomy" in operations):
         logging.info("Apply anatomy...")
@@ -31,7 +32,7 @@ def run(
 
     # apply bundle
     if not operations or ("bundle" in operations):
-        apply_bundle(studio, is_staging, fake_apply, verbose)
+        apply_bundle(studio, is_staging, fake_apply, verbose, **kwargs)
     else:
         logging.info("Skip bundle")
 
@@ -43,6 +44,12 @@ def run(
 
     logging.info("Apply command finished!")
 
+    # apply settings
+    if not operations or ("settings" in operations):
+        apply_studio_settings(studio, is_staging, fake_apply, **kwargs)
+    else:
+        logging.info("Skip settings")
+    # per project settings
     # projects = projects or studio.get_project_names()
     # apply projects settings
 
@@ -51,7 +58,6 @@ def apply_bundle(
     studio: StudioSettings,
     is_staging=False,
     fake_apply=False,
-    verbose=None,
     **kwargs,
 ):
     """
@@ -115,19 +121,21 @@ def apply_bundle(
             studio.update_bundle(bundle_name, repo_bundle)
 
 
-def apply_addon_settings(
+def apply_studio_settings(
     studio: StudioSettings,
-    projects: list,
     is_staging=False,
     fake_apply=False,
-    verbose=None,
     **kwargs,
 ):
     """
     Назначает настройки на аддоны сервера
     Нужные версии аддонов уже должны быть инсталированны в бандл
     """
-    server_addons = studio.get_server_addons_settings()
+    from ayon_tools.api.bundles import BundleVariant
+
+    variant = BundleVariant.STAGING if is_staging else BundleVariant.PRODUCTION
+
+    server_addons = studio.get_server_addons_settings(variant, variant)
     if not server_addons:
         raise ServerDataError("Wrong server addon data")
 
@@ -140,15 +148,10 @@ def apply_addon_settings(
         if not repo_addon_settings:
             logging.debug(f"Empty settings for {addon_name}")
             continue
-        # studio_addon_settings = studio.get_addon_settings(addon_name, version)
-        studio_addon_settings = addon.get_server_settings(version)
-        # studio_addon_settings = server_addons[addon_name]
-        if tools.compare_dicts(repo_addon_settings, studio_addon_settings):
-            logging.info(f"Addon settings is OK: {addon_name}")
-            continue
+        if not fake_apply:
+            studio.set_addon_settings(addon_name, version, repo_addon_settings, variant)
         else:
-            print("APPLY FOR", addon_name)
-            studio.set_addon_settings(addon_name, version, repo_addon_settings)
+            logging.info(f"Fake apply settings for {addon_name}")
 
 
 def apply_anatomy(

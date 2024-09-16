@@ -3,7 +3,7 @@ from .auth import default_auth, Auth
 import requests
 
 
-class BundleMode:
+class BundleVariant:
     PRODUCTION = "production"
     STAGING = "staging"
 

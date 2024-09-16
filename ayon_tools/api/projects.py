@@ -14,9 +14,10 @@ def get_projects(auth: Auth = default_auth) -> list[dict]:
         data = ayon_api.get_projects()
     return data
 
-def get_project_settings(status: str, project: str,auth: Auth = default_auth):
+
+def get_project_settings(project: str, variant: str, auth: Auth = default_auth):
     response = requests.get(
-        url=f"{auth.SERVER_URL}/api/settings?variant={status}&project_name={project}&summary=true",
+        url=f"{auth.SERVER_URL}/api/settings?project_name={project}&variant={variant}&summary=true",
         headers=auth.HEADERS,
     )
     data = response.json()
