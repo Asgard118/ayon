@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import TYPE_CHECKING
 from pathlib import Path
 from ayon_tools.repository import repo, Repository
 import ayon_tools
-from ayon_tools.utils import server_addon_tools
 import subprocess
 
 if TYPE_CHECKING:
@@ -35,14 +35,18 @@ class Addon:
         assert conf.get("url"), f'Url not defined in addon config "{self.name}"'
         return conf
 
+    def get_versions(self):
+        rep = Repository(self.url)
+        tags = rep.get_tags()
+        versions = [tag for tag in tags if re.match(r"\d+\.\d+\.\d+.*", tag)]
+        return versions
+
     @property
     def url(self):
         return self.get_addon_info()["url"]
 
     def get_default_settings(self, addon_ver: str):
-        return server_addon_tools.get_addon_default_settings(
-            self.name, self.studio, addon_ver
-        )
+        return self.studio.get_addon_default_settings(self.name, addon_ver)
 
     def get_repo_settings(self, project=None):
         # get default
