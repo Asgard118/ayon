@@ -82,6 +82,12 @@ class Repository:
         self.repo.head.set_target(commit.id)
         return commit.id
 
+    def get_tags(self):
+        all_refs = self.repo.listall_references()
+        return sorted(
+            [ref.split("/")[-1] for ref in all_refs if ref.startswith("refs/tags/")]
+        )
+
     def get_file_content(
         self, file_name: str, branch: str = None, default=NOT_SET_TYPE
     ):
