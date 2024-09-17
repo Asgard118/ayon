@@ -70,7 +70,7 @@ def restore(studio: StudioSettings, path: str, **kwargs):
         data = json.load(file)
 
     # installers
-    for installer in data["installer"]["installers"]:
+    for installer in data["installers"]:
         if studio.installer_exists(installer["filename"]):
             continue
         studio.upload_installers(
@@ -107,9 +107,8 @@ def restore(studio: StudioSettings, path: str, **kwargs):
     # addons
     for addon_name, addon_ver in data["server_production_bundle"]["addons"].items():
         settings = data["server_addons"].get(addon_name, {})
-        if addon_name == "ayon_ocio" or "openpype":
-            continue
-        studio.set_addon_settings(addon_name, addon_ver, settings)
+        if addon_name != "ayon_ocio" and addon_name != "openpype":
+            studio.set_addon_settings(addon_name, addon_ver, settings)
 
     # project
     if data.get("projects"):
@@ -119,9 +118,9 @@ def restore(studio: StudioSettings, path: str, **kwargs):
             studio.set_project_anatomy(project_name, project_data["anatomy"])
 
             # project productions settings
-            for addons in project_data["settings"].items():
+            for addons in project_data.items():
                 addon_name, settings = addons
-                for addon in project_data["projects_settings_production"]["addons"]:
+                for addon in project_data["projects_settings_production"]:
                     if addon_name == "ayon_ocio" or "openpype":
                         continue
                     if addon["name"] == addon_name:
@@ -131,13 +130,14 @@ def restore(studio: StudioSettings, path: str, **kwargs):
                         )
 
             # project staging settings
-            for addons in project_data["settings"].items():
+            for addons in project_data.items():
                 addon_name, settings = addons
-                for addon in project_data["projects_settings_staging"]["addons"]:
-                    if addon_name == "ayon_ocio" or "openpype":
-                        continue
-                    if addon["name"] == addon_name:
-                        version = addon["version"]
-                        studio.set_project_addon_settings(
-                            project_name, addon_name, version, settings
-                        )
+                if project_data["projects_settings_staging"] != None:
+                    for addon in project_data["projects_settings_staging"]:
+                        if addon_name != "ayon_ocio" and addon_name != "openpype":
+                            version = addon["version"]
+                            studio.set_project_addon_settings(
+                                project_name, addon_name, version, settings
+                            )
+                else:
+                    continue

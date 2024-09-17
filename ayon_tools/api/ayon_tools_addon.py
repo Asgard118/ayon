@@ -38,6 +38,7 @@ def install(studio: "StudioSettings"):
     versions = addon.get_versions()
     if not versions:
         raise Exception("No versions found for ayon_tools")
+    logging.info(f"Install ayon_tools v{versions[-1]}")
     studio.install_addon(addon.name, versions[-1])
     studio.restart_server()
 

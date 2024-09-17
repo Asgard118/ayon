@@ -34,7 +34,7 @@ def run(
 
     # apply bundle
     if not operations or ("bundle" in operations):
-        apply_bundle(studio, is_staging, fake_apply, verbose, **kwargs)
+        apply_bundle(studio, is_staging, fake_apply, **kwargs)
     else:
         logging.info("Skip bundle")
 
@@ -150,7 +150,7 @@ def apply_studio_settings(
             logging.debug(f"Empty settings for {addon_name}")
             continue
         if not fake_apply:
-            studio.set_addon_settings(addon_name, version, repo_addon_settings, variant)
+            studio.set_addon_settings(addon_name, version, repo_addon_settings)
         else:
             logging.info(f"Fake apply settings for {addon_name}")
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+import sys
 from typing import TYPE_CHECKING
 from pathlib import Path
 from ayon_tools.repository import repo, Repository
@@ -150,13 +151,16 @@ class Addon:
         return self.get_addon_info()["url"]
 
     def build(self, version) -> str:
+        logging.info(f"Build addon {self.name} v{version}")
         rep = Repository(self.url)
         rep.reload()
         rep.set_tag(version)
         create_package_script = rep.workdir / "create_package.py"
         subprocess.run(
-            ["python", create_package_script], capture_output=True, text=True
+            [sys.executable, create_package_script], capture_output=True, text=True
         )
-        zip_file = next(rep.workdir.joinpath("package").glob(f"*{version}.zip"))
+        build_dir = rep.workdir.joinpath("package")
+        logging.info(f"Build dir: {build_dir}")
+        zip_file = next(build_dir.glob(f"*{version}.zip"))
 
         return zip_file
