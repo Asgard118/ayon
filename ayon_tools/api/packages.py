@@ -1,5 +1,6 @@
 import json
 import logging
+from pathlib import Path
 
 import ayon_api
 from ayon_api.exceptions import HTTPRequestError
@@ -113,3 +114,17 @@ def package_name_to_data(*package_names: str):
         meta = get_package_meta_data(package_name)
         data[meta["platform"]] = meta["filename"]
     return data
+
+
+def download_dep_packs(dst_directory: str or Path, auth: Auth = default_auth):
+    files = get_available_dep_package_list()
+    for filename in files:
+        src_filename = filename + ".zip"
+        if src_filename == "ayon_2403071252_windows.zip":
+            continue
+        dst_filename = src_filename
+        with auth:
+            ayon_api.download_dependency_package(
+                src_filename, dst_directory, dst_filename
+            )
+    return dst_directory

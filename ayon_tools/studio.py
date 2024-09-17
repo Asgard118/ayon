@@ -457,6 +457,9 @@ class StudioSettings:
 
     # installer
 
+    def get_installers(self):
+        return api.installers.get_installers(auth=self.auth)
+
     def installer_exists(self, name: str) -> bool:
         return ayon_tools.api.installers.installer_exists(name, auth=self.auth)
 
@@ -487,6 +490,9 @@ class StudioSettings:
     #             self.auth,
     #             reinstall=reinstall,
     #         )
+
+    def upload_installers(self, *args, **kwargs):
+        api.installers.upload_installers(*args, **kwargs, auth=self.auth)
 
     # dependency packages
 
@@ -520,3 +526,9 @@ class StudioSettings:
             return True
         except DepPackageNotExists:
             return False
+
+    def download_dep_packs(self, dst_directory: str or Path):
+        return api.packages.download_dep_packs(dst_directory, auth=self.auth)
+
+    def del_dep_pack(self, filename: str or Path):
+        api.packages.remove_dep_package(filename, auth=self.auth)

@@ -127,3 +127,13 @@ def get_installers_download_urls(tag: str):
 def cleanup_installer_dir():
     if INSTALLERS_DIR.exists():
         shutil.rmtree(INSTALLERS_DIR)
+
+
+def get_installers(auth: Auth):
+    with auth:
+        return ayon_api.get_installers()
+
+
+def upload_installers(auth: Auth, *args, **kwargs):
+    with auth:
+        ayon_api.create_installer(*args, **kwargs)
