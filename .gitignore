@@ -4,3 +4,4 @@ _tmp/
 .idea/
 workdir
 __pycache__/
+.zip
