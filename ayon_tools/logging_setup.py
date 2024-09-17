@@ -2,7 +2,7 @@ import logging
 import os
 
 format = (
-    "%(levelname)-8s | %(asctime)s | %(module)-15s | line: %(lineno)-4d | %(message)s"
+    "%(levelname)-8s | %(asctime)s | %(module)-20s | line: %(lineno)-4d | %(message)s"
 )
 
 if os.getenv("DEBUG"):

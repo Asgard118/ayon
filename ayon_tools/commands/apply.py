@@ -6,6 +6,7 @@ from ayon_tools.exceptipns import RepositoryDataError, ServerDataError
 from ayon_tools.studio import StudioSettings
 from ayon_tools import tools
 from ayon_tools.tools import show_dict_diffs
+from ayon_tools.api import ayon_tools_addon
 
 
 def run(
@@ -22,6 +23,7 @@ def run(
     projects = projects or studio.get_project_names()
 
     studio.disable_onboarding()
+    ayon_tools_addon.ensure_installed(studio)
 
     # apply anatomy
     if not operations or ("anatomy" in operations):
@@ -71,7 +73,6 @@ def apply_bundle(
         logging.warning("Repository bundle data is not exists")
         return
     # check and install addons
-    # from ayon_tools.base_addon import Addon
 
     restart_required = False
     for addon_name, addon_version in repo_bundle["addons"].items():
