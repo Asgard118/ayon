@@ -1,7 +1,0 @@
-- name: example
-  scope:
-    - project
-    - task
-  data:
-    type: string
-    title: Example

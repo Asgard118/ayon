@@ -2,6 +2,6 @@
 develop-tests.py
 _tmp/
 .idea/
-workdir
+workdir/
 __pycache__/
 .zip

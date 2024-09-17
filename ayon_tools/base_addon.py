@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import logging
+import re
+import sys
 from typing import TYPE_CHECKING
 from pathlib import Path
 from ayon_tools.repository import repo, Repository
 import ayon_tools
-from ayon_tools.utils import server_addon_tools
 import subprocess
 
 if TYPE_CHECKING:
@@ -35,14 +36,18 @@ class Addon:
         assert conf.get("url"), f'Url not defined in addon config "{self.name}"'
         return conf
 
+    def get_versions(self):
+        rep = Repository(self.url)
+        tags = rep.get_tags()
+        versions = [tag for tag in tags if re.match(r"\d+\.\d+\.\d+.*", tag)]
+        return versions
+
     @property
     def url(self):
         return self.get_addon_info()["url"]
 
     def get_default_settings(self, addon_ver: str):
-        return server_addon_tools.get_addon_default_settings(
-            self.name, self.studio, addon_ver
-        )
+        return self.studio.get_addon_default_settings(self.name, addon_ver)
 
     def get_repo_settings(self, project=None):
         # get default
@@ -146,13 +151,16 @@ class Addon:
         return self.get_addon_info()["url"]
 
     def build(self, version) -> str:
+        logging.info(f"Build addon {self.name} v{version}")
         rep = Repository(self.url)
         rep.reload()
         rep.set_tag(version)
         create_package_script = rep.workdir / "create_package.py"
         subprocess.run(
-            ["python", create_package_script], capture_output=True, text=True
+            [sys.executable, create_package_script], capture_output=True, text=True
         )
-        zip_file = next(rep.workdir.joinpath("package").glob(f"*{version}.zip"))
+        build_dir = rep.workdir.joinpath("package")
+        logging.info(f"Build dir: {build_dir}")
+        zip_file = next(build_dir.glob(f"*{version}.zip"))
 
         return zip_file

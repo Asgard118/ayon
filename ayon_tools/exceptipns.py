@@ -2,6 +2,10 @@ class AyonToolError(Exception):
     pass
 
 
+class ConfigError(AyonToolError):
+    pass
+
+
 class RepositoryDataError(AyonToolError):
     pass
 
@@ -19,4 +23,12 @@ class AnatomyUpdateError(AyonToolError):
 
 
 class AnatomyConflictError(AnatomyUpdateError):
+    pass
+
+
+class DepPackageNotExists(AyonToolError):
+    pass
+
+
+class DepPackageAlreadyInstalled(AyonToolError):
     pass

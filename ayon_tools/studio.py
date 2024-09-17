@@ -9,11 +9,14 @@ import requests
 
 import re
 
+import ayon_tools.api.installers
 from . import api, tools
 from . import config
+from .exceptipns import DepPackageNotExists
 from .repository import repo, Repository
 from .api import system
 from .base_addon import Addon
+
 
 class StudioSettings:
     bundle_config_file = "bundle.yml"
@@ -50,6 +53,7 @@ class StudioSettings:
 
     def restart_server(self, wait=True):
         from datetime import datetime, timedelta
+        from ayon_api.exceptions import ServerError
         import time
 
         restart_time = datetime.now()
@@ -57,7 +61,7 @@ class StudioSettings:
         if wait:
             find_after = restart_time
             time.sleep(1)
-            for i in range(10):
+            for i in range(15):
                 events = list(
                     system.get_events(
                         ["server.restart_requested"],
@@ -68,12 +72,16 @@ class StudioSettings:
                     find_after = datetime.fromisoformat(events[-1]["createdAt"])
                     break
                 time.sleep(1)
-            for i in range(10):
-                events = system.get_events(
-                    ["server.started"],
-                    newer_than=find_after,
-                )
-                if not events:
+            for i in range(15):
+                try:
+                    events = system.get_events(
+                        ["server.started"],
+                        newer_than=find_after,
+                    )
+                except ServerError:
+                    time.sleep(1)
+                    continue
+                if events:
                     break
 
     def __str__(self):
@@ -93,8 +101,8 @@ class StudioSettings:
 
     # SERVER ##################################################################
 
-    def get_server_addons_settings(self):
-        return api.addons.get_addons_settings(auth=self.auth)
+    def get_server_addons_settings(self, bundle_name: str, variant: str):
+        return api.addons.get_addons_settings(bundle_name, variant, auth=self.auth)
 
     def get_projects(self):
         return api.projects.get_projects(auth=self.auth)
@@ -104,22 +112,21 @@ class StudioSettings:
 
     # studio addon settings
 
-    def get_addons(self):
-        return api.addons.get_studio_settings(auth=self.auth)
-
     def get_addon_settings(self, name: str, ver: str):
         return api.addons.get_addon_studio_settings(name, ver, auth=self.auth)
 
-    def get_addons_settings(self):
-        return api.addons.get_addons_settings(auth=self.auth)
+    def get_addon_default_settings(self, addon_name: str, addon_version: str):
+        return api.ayon_tools_addon.get_addon_default_settings(
+            addon_name, addon_version, self.auth
+        )
 
     def set_addon_settings(self, name: str, ver: str, settings: dict):
-        api.addons.set_studio_settings(name, ver, settings, auth=self.auth)
+        api.addons.set_addon_studio_settings(name, ver, settings, auth=self.auth)
 
     def addon_installed(self, name: str, ver: str) -> bool:
         addons = api.addons.get_installed_addon_list(auth=self.auth)
-        for item in addons.get('items', []):
-            if item.get('addonName') == name and item.get('addonVersion') == ver:
+        for item in addons.get("items", []):
+            if item.get("addonName") == name and item.get("addonVersion") == ver:
                 return True
         return False
 
@@ -277,10 +284,7 @@ class StudioSettings:
         zip = str(zip_file)
         api.addons.install_addon(zip, auth=self.auth)
 
-    # project configs
-
-    def get_project_settings_for_status(self, status:str, project:str):
-        return api.projects.get_project_settings(status, project, auth=self.auth)
+    # project anatomy
 
     def get_project_anatomy(self, project_name: str):
         return api.anatomy.get_project_anatomy(project_name, auth=self.auth)
@@ -288,13 +292,22 @@ class StudioSettings:
     def set_project_anatomy(self, project_name: str, settings: dict):
         return api.anatomy.set_project_anatomy(project_name, settings, auth=self.auth)
 
-    def get_project_addons_settings(self, project_name: str):
-        return api.addons.get_project_settings(project_name, auth=self.auth)
+    # addon settings
+
+    # def get_project_settings_for_status(self, status: str, project: str):
+    #     return api.projects.get_project_settings(status, project, auth=self.auth)
+
+    def get_project_addons_settings(
+        self, project_name: str, bundle_name: str, variant: str
+    ):
+        return api.addons.get_project_settings(
+            project_name, bundle_name, variant, auth=self.auth
+        )
 
     def set_project_addon_settings(
         self, project_name: str, addon_name: str, addon_version: str, settings: dict
     ):
-        return api.addons.set_project_settings(
+        return api.addons.set_addon_project_settings(
             addon_name, addon_version, project_name, settings, auth=self.auth
         )
 
@@ -446,39 +459,83 @@ class StudioSettings:
         else:
             raise NameError(f'Solver module "{module_name}" not found')
 
+    def disable_onboarding(self):
+        api.system.disable_onboarding(self.auth)
+
     # installer
 
+    def get_installers(self):
+        return api.installers.get_installers(auth=self.auth)
+
     def installer_exists(self, name: str) -> bool:
-        return api.bundles.installer_exists(name, auth=self.auth)
+        return ayon_tools.api.installers.installer_exists(name, auth=self.auth)
 
     def add_installer(self, version, reinstall=False):
-        installers_info = tools.get_installers_download_urls(version)
+        installers_info = ayon_tools.api.installers.get_installers_download_urls(
+            version
+        )
 
         to_install = []
         for inst in installers_info:
             if self.installer_exists(inst["name"]):
                 if reinstall:
-                    api.bundles.remove_installer(inst["name"], self.auth)
+                    ayon_tools.api.installers.remove_installer(inst["name"], self.auth)
                 else:
                     continue
             to_install.append(inst)
         for inst in to_install:
             logging.info(f'Add Installer {inst["name"]}')
-            api.bundles.download_and_install_installer(
+            ayon_tools.api.installers.download_and_install_installer(
                 inst["url"], inst["json"], auth=self.auth
             )
 
-    def upload_installer(self, installer_dir: Path, reinstall=False):
-        for src_filepath in installer_dir.glob("*.json"):
-            api.bundles.upload_installer(
-                src_filepath.with_suffix(""),
-                src_filepath,
-                self.auth,
-                reinstall=reinstall,
-            )
+    # def upload_installer(self, installer_dir: Path, reinstall=False):
+    #     for src_filepath in installer_dir.glob("*.json"):
+    #         ayon_tools.api.installers.upload_installer(
+    #             src_filepath.with_suffix(""),
+    #             src_filepath,
+    #             self.auth,
+    #             reinstall=reinstall,
+    #         )
 
-    def add_dep_package(self, name):
-        api.packages.set_dep_pack(name, auth=self.auth)
+    def upload_installers(self, *args, **kwargs):
+        api.installers.upload_installers(*args, **kwargs, auth=self.auth)
 
-    def get_pack(self):
-        return api.packages.get_dep_packages(auth=self.auth)
+    # dependency packages
+
+    def get_dep_packages(self):
+        data = api.packages.get_dep_packages(auth=self.auth)
+        return data["packages"]
+
+    def get_dep_package_names(self):
+        return [Path(p["filename"]).stem for p in self.get_dep_packages()]
+
+    def add_dep_packages(self, package_names: list[str]):
+        """
+        Add dep packages and return correct bundle data
+        """
+        logging.info(f"Add dep packages {package_names}")
+        existing_packages = self.get_dep_package_names()
+        for package_name in package_names:
+            if package_name in existing_packages:
+                logging.info(f"Package {package_name} already exists")
+                continue
+            logging.info(f"Add dependency package {package_name}")
+            self.add_dep_package(package_name)
+        return api.packages.package_name_to_data(*package_names)
+
+    def add_dep_package(self, package_name: str):
+        return api.packages.add_dep_package(package_name, auth=self.auth)
+
+    def remove_dep_package(self, package_name: str):
+        try:
+            api.packages.remove_dep_package(package_name, auth=self.auth)
+            return True
+        except DepPackageNotExists:
+            return False
+
+    def download_dep_packs(self, dst_directory: str or Path):
+        return api.packages.download_dep_packs(dst_directory, auth=self.auth)
+
+    def del_dep_pack(self, filename: str or Path):
+        api.packages.remove_dep_package(filename, auth=self.auth)

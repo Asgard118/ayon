@@ -7,6 +7,12 @@ import pygit2
 from . import config
 
 NOT_SET_TYPE = type("NoneType")
+private_key_path = Path(config.PRIVATE_KEY_PATH).expanduser().as_posix()
+public_key_path = Path(config.PUBLIC_KEY_PATH).expanduser().as_posix()
+
+
+keypair = pygit2.Keypair("git", public_key_path, private_key_path, "")
+callbacks = pygit2.RemoteCallbacks(credentials=keypair)
 
 
 class Repository:
@@ -30,7 +36,11 @@ class Repository:
         if not self.workdir.exists() or not list(self.workdir.iterdir()):
             # clone if not exists
             logging.info(f"Cloning repository from {self.url} to {self.workdir}")
-            self._git_repo = pygit2.clone_repository(self.url, self.workdir.as_posix())
+            self._git_repo = pygit2.clone_repository(
+                self.url,
+                self.workdir.as_posix(),
+                callbacks=callbacks if self.url.startswith("git") else None,
+            )
         else:
             self._git_repo = pygit2.Repository(self.workdir / ".git")
             if self.skip_update:
@@ -40,7 +50,7 @@ class Repository:
             # update all if exists
             self._git_repo.reset(self._git_repo.head.target, pygit2.GIT_RESET_HARD)
             remote = self._git_repo.remotes["origin"]
-            remote.fetch()
+            remote.fetch(callbacks=callbacks if self.url.startswith("git") else None)
             for branch in self._git_repo.branches:
                 if branch.startswith("refs/remotes/origin/"):
                     local_branch = branch.replace("refs/remotes/origin/", "refs/heads/")
@@ -72,6 +82,12 @@ class Repository:
         self.repo.head.set_target(commit.id)
         return commit.id
 
+    def get_tags(self):
+        all_refs = self.repo.listall_references()
+        return sorted(
+            [ref.split("/")[-1] for ref in all_refs if ref.startswith("refs/tags/")]
+        )
+
     def get_file_content(
         self, file_name: str, branch: str = None, default=NOT_SET_TYPE
     ):
@@ -86,12 +102,13 @@ class Repository:
             data = self.read_from_file(file_name, default)
         else:
             data = self.read_from_repo(file_name, branch, default)
-        if Path(file_name).suffix == ".json":
-            logging.debug("Decoding JSON")
-            data = json.loads(data)
-        elif data and Path(file_name).suffix in (".yaml", ".yml"):
-            logging.debug("Decoding YAML")
-            data = yaml.safe_load(data)
+        if data is not None:
+            if Path(file_name).suffix == ".json":
+                logging.debug("Decoding JSON")
+                data = json.loads(data)
+            elif data and Path(file_name).suffix in (".yaml", ".yml"):
+                logging.debug("Decoding YAML")
+                data = yaml.safe_load(data)
         return data
 
     def read_from_repo(self, file_name, branch, default):

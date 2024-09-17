@@ -1,6 +1,7 @@
 from pathlib import Path
 from ayon_tools.base_shortcut_solver import Solver
 from ayon_tools.repository import repo
+from ayon_tools.api import anatomy
 
 
 class AnatomySolver(Solver):
@@ -10,7 +11,12 @@ class AnatomySolver(Solver):
         return anatomy_data
 
     def get_default_anatomy(self):
-        return repo.get_file_content("defaults/anatomy.json", branch=self.studio.name)
+        default_anatomy = repo.get_file_content(
+            "defaults/anatomy.json", branch=self.studio.name, default=None
+        )
+        if not default_anatomy:
+            default_anatomy = anatomy.get_build_in_anatomy_preset(auth=self.studio.auth)
+        return default_anatomy
 
     def resolve_shortcuts(self, default_data, project_name: str = None):
         # templates
